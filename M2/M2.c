@@ -158,11 +158,15 @@ int main()
   r1=-(-r0-(1-cexp(I*b*h)/b))/(a-b);
  // printf("r0=%lf+i%lf	r1=%lf+i%lf\n",creal(r0),cimag(r0),creal(r1),cimag(r1));
  // continue;
+ 
+  //обнуление значений матрицы А2
+  for(int j1=0;j1<FLAVS;j1++)
+	for(int j2=0;j2<FLAVS;j2++)
+		A2[j1][j2]=0.;
   
   for(int j1=0;j1<FLAVS;j1++)
 	for(int j2=0;j2<FLAVS;j2++)
 	{   
-		A2[j1][j2]=0.;
 	    for(int j3=0;j3<FLAVS;j3++)
 	      A2[j1][j2]+=A[j1][j3]*A[j3][j2];
         Eom2[j1][j2]=cexp(I*h*z)*cexp(I*L_r[0]*h)*((1-L_r[0]*(r0-L_r[1]*r1))*One[j1][j2]+(r0+L_r[2]*r1)*A[j1][j2]+r1*A2[j1][j2]);
