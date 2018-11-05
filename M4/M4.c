@@ -12,7 +12,7 @@ double ex(double);
 
 double ex(double t)
 {
-  double g=65956.0, n=10.54;
+  double g=659560, n=10.54;//g=659560
   return g*exp(-n*t);
 }
 
@@ -23,13 +23,13 @@ double EigenV(double p, double q, int k)
   
   if(q<=0) m=1;
   else m=-1;
-	L=m*2*sqrt(p/3)*cos(acos((3*q*sqrt(p))/(2*p*sqrt(3)))/3-2*M_PI*k/3);
+	L=m*2*sqrt(p/3)*cos(acos((3*q*sqrt(3))/(2*p*sqrt(p)))/3-2*M_PI*k/3); 
   return L; 	
 }
 
 int main()
 {
-  double k=435.196,b0=0.030554;
+  double k=4351960,b0=0.030554; //k=4351960
   double s12=sqrt(0.308),s13=sqrt(0.0234),c12=sqrt(1-s12*s12),c13=sqrt(1-s13*s13);  
   int One[FLAVS][FLAVS]= //Единичная матрица
   {
@@ -122,9 +122,17 @@ int main()
         Tr2+=A[j1][j2]*A[j2][j1]; 
      
     p=Tr2/2; q=Det;
+    //printf("%lf\n",(3*q*sqrt(3))/(2*p*sqrt(p)));
+    //continue;
+    //printf("p=%lf, q=%lf\n",p,q);
+    //continue;
+    
        
 	for(int t=0;t<FLAVS;t++)
-	  L[t]=EigenV(p,q,t);
+	  {
+		  L[t]=EigenV(p,q,t);
+		  //printf("%d [%d], L = %lf\n",i,t,L[t]);
+	  }
 	  
 	//переобозначаем, чтобы собственное значение возрастало взависимости от индекса 0<1<2
     if((L[0]<L[1])&&(L[1]<L[2])) //012 уже нужное распределение
@@ -154,29 +162,33 @@ int main()
 	   L_r[1]=L[0];
 	   L_r[2]=L[1];
     }
-    if((L[2]<L[0])&&(L[0]<L[1]))  //210, нужно поменять местами 0 и 2
+    if((L[2]<L[1])&&(L[1]<L[0]))  //210, нужно поменять местами 0 и 2
     { 
 	   L_r[0]=L[2];
 	   L_r[1]=L[1];
 	   L_r[2]=L[0];
     }
-    
+        
   a=L_r[1]-L_r[0];
   b=L_r[2]-L_r[0];
+  //printf("a=%lf	b=%lf	",a,b);
+  //printf("Exp=%lf+i%lf\n",creal(cexp(I*a*h)),cimag(cexp(I*a*h)));
+  //continue;
   r0=-(1-cexp(I*a*h))/a;
   r1=-(-r0-(1-cexp(I*b*h)/b))/(a-b);
 	  
   for(int j1=0;j1<FLAVS;j1++)
 	for(int j2=0;j2<FLAVS;j2++)
 	{
+		A2[j1][j2]=0.;
 		for(int j3=0;j3<FLAVS;j3++)
-	      A2[j1][j2]=A[j1][j3]*A[j3][j2];
+	      A2[j1][j2]+=A[j1][j3]*A[j3][j2];
         Eom4[j1][j2]=cexp(I*h*z)*cexp(I*L_r[0]*h)*((1-L_r[0]*(r0-L_r[1]*r1))*One[j1][j2]+(r0+L_r[2]*r1)*A[j1][j2]+r1*A2[j1][j2]);
     }
-  P=0.;
      
   for(int j1=0;j1<FLAVS;j1++)
   {
+	  P=0.;
       Psi[j1]=Eom4[j1][0]*Psi[0];
       Psi[j1]+=Eom4[j1][1]*Psi[1];
       Psi[j1]+=Eom4[j1][2]*Psi[2];

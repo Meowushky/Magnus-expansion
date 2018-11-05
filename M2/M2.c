@@ -23,7 +23,7 @@ double lambda(double p, double q, int k)
   
   if(q<=0) m=1;
   else m=-1;
-	L=m*2*sqrt(p/3)*cos(acos((3*q*sqrt(p))/(2*p*sqrt(3)))/3-2*M_PI*k/3);
+	L=m*2*sqrt(p/3)*cos(acos((3*q*sqrt(3))/(2*p*sqrt(p)))/3-2*M_PI*k/3);
   return L; 	
 }
 
@@ -143,7 +143,7 @@ int main()
 	   L_r[1]=L[0];
 	   L_r[2]=L[1];
     }
-    if((L[2]<L[0])&&(L[0]<L[1]))  //210, нужно поменять местами 0 и 2
+    if((L[2]<L[1])&&(L[1]<L[0]))  //210, нужно поменять местами 0 и 2
     { 
 	   L_r[0]=L[2];
 	   L_r[1]=L[1];
@@ -152,24 +152,26 @@ int main()
     
   a=L_r[1]-L_r[0];
   b=L_r[2]-L_r[0];
-  printf("a=%lf	b=%lf	",a,b);
-  printf("Exp=%lf+i%lf\n",creal(cexp(I*a*h)),cimag(cexp(I*a*h)));
+  //printf("a=%lf	b=%lf	",a,b);
+  //printf("Exp=%lf+i%lf\n",creal(cexp(I*a*h)),cimag(cexp(I*a*h)));
   r0=-(1-cexp(I*a*h))/a;
   r1=-(-r0-(1-cexp(I*b*h)/b))/(a-b);
-  printf("r0=%lf+i%lf	r1=%lf+i%lf\n",creal(r0),cimag(r0),creal(r1),cimag(r1));
-  continue;
+ // printf("r0=%lf+i%lf	r1=%lf+i%lf\n",creal(r0),cimag(r0),creal(r1),cimag(r1));
+ // continue;
   
   for(int j1=0;j1<FLAVS;j1++)
 	for(int j2=0;j2<FLAVS;j2++)
-	{
+	{   
+		A2[j1][j2]=0.;
 	    for(int j3=0;j3<FLAVS;j3++)
-	      A2[j1][j2]=A[j1][j3]*A[j3][j2];
+	      A2[j1][j2]+=A[j1][j3]*A[j3][j2];
         Eom2[j1][j2]=cexp(I*h*z)*cexp(I*L_r[0]*h)*((1-L_r[0]*(r0-L_r[1]*r1))*One[j1][j2]+(r0+L_r[2]*r1)*A[j1][j2]+r1*A2[j1][j2]);
     }
-  P=0.;
+  
      
   for(int j1=0;j1<FLAVS;j1++)
   {
+	  P=0.;
       Psi[j1]=Eom2[j1][0]*Psi[0];
       Psi[j1]+=Eom2[j1][1]*Psi[1];
       Psi[j1]+=Eom2[j1][2]*Psi[2];
