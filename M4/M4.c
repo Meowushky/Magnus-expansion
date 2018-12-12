@@ -14,7 +14,7 @@ typedef struct
   uint64_t N;
   double d0,d1;
   double (*dens)(double);
-  double (*H0)[FLAVS],(*W)[FLAVS];  
+  double (*H0)[FLAVS],(*W)[FLAVS],(*cH0W)[FLAVS],(*cH0H0W)[FLAVS],(*cWH0W)[FLAVS];  
 } wf_ctx;
 
 double ex(double);
@@ -23,14 +23,14 @@ void aWF_calc(wf_ctx*, double complex*);
 
 void aWF_calc(wf_ctx *ctx, double complex *Psi)
 {
-  uint64_t i;
-  double h,x;
+  double h,x,tol,Er,S1[FLAVS][FLAVS];
   x=ctx->d0;
-  h=(ctx->d1-ctx->d0)/(ctx->N-1);
+  tol=0.0001;
+  h=tol/2.;
   double xi_m,xi_p,f_m,f_p;
   double z,p,q,F;
-  double commut[FLAVS][FLAVS],L[2*FLAVS-1];
-  double complex A[FLAVS][FLAVS],Eom4[FLAVS][FLAVS],psi_0[FLAVS];
+  double L[2*FLAVS-1];
+  double complex A[FLAVS][FLAVS],Eom4[FLAVS][FLAVS],psi_0[FLAVS],S2[FLAVS][FLAVS];
   double complex r0,r1;
   double One[FLAVS][FLAVS]=
   {
@@ -39,8 +39,11 @@ void aWF_calc(wf_ctx *ctx, double complex *Psi)
     {0., 0., 1.}
   };
   
-  for(i=0;i<ctx->N-1;i++)
+  while(x<ctx->d1) 
   {
+    if(x+h>ctx->d1) 
+      h=ctx->d1-x;
+      
     xi_m=x+(1.-1./sqrt(3.))*h/2.;
     xi_p=x+(1.+1./sqrt(3.))*h/2.;
     f_m=ctx->dens(xi_m);
@@ -48,19 +51,19 @@ void aWF_calc(wf_ctx *ctx, double complex *Psi)
     x+=h;
   
     z=0.;
-  
-    //вычисление коммутатора H0 с W
+    
     for(int j1=0;j1<FLAVS;j1++)
       for(int j2=0;j2<FLAVS;j2++)
-    for(int j3=0;j3<FLAVS;j3++)
-      commut[j1][j2]=ctx->H0[j1][j3]*ctx->W[j3][j2]-ctx->W[j1][j3]*ctx->H0[j3][j2];
-  
+      {
+        S1[j1][j2]=-sqrt(3.)*(f_p-f_m)*ctx->cH0W[j1][j2]/12.;
+        S2[j1][j2]=I*sqrt(3.)*(f_p-f_m)*(ctx->cH0H0W[j1][j2]+(f_p+f_m)*ctx->cWH0W[j1][j2]/2.)/24.;
+      }
     for(int j1=0;j1<FLAVS;j1++)
     {
       for(int j2=0;j2<FLAVS;j2++)
       {
-        A[j1][j2]=-ctx->H0[j1][j2]-(f_p+f_m)*ctx->W[j1][j2]/2.-
-        I*sqrt(3.)*(f_p-f_m)*commut[j1][j2]*h/12.;
+        A[j1][j2]=-ctx->H0[j1][j2]-(f_p+f_m)*ctx->W[j1][j2]/2.+
+        I*S1[j1][j2]*h;
       }
       z+=A[j1][j1]/3.;
     }
@@ -105,9 +108,19 @@ void aWF_calc(wf_ctx *ctx, double complex *Psi)
       psi_0[j1]+=Eom4[j1][1]*Psi[1];
       psi_0[j1]+=Eom4[j1][2]*Psi[2];
     }
-    
+
     for(int j1=0;j1<FLAVS;j1++)
-      Psi[j1]=psi_0[j1];  
+      Psi[j1]=psi_0[j1];
+
+    for(int j1=0;j1<FLAVS;j1++)
+      for(int j2=0;j2<FLAVS;j2++)
+        for(int j3=0;j3<FLAVS;j3++)
+          psi_0[j1]=(S1[j1][j2]+h*S2[j1][j2]+h*h*S1[j1][j3]*S1[j3][j2])*Psi[j2];
+      
+    Er=h*h*sqrt(psi_0[0]*psi_0[0]+psi_0[1]*psi_0[1]+psi_0[2]*psi_0[2]);
+    
+    if(Er>tol)
+      h=h*0.8*pow(tol/Er,1./3.);
   }
 }
 
@@ -158,8 +171,8 @@ void EigenV(double *L,double p, double q)
 int main(int argc,char **argv)
 {  
   double a=4351960.,b=0.030554,E=1.0;
-  double s12=sqrt(0.308), //0.308 
-    s13=sqrt(0.0234), //0.0234
+  double s12=sqrt(0.308),
+    s13=sqrt(0.0234),
     c12=sqrt(1.-s12*s12),
     c13=sqrt(1.-s13*s13);
   double W[FLAVS][FLAVS]=
@@ -196,6 +209,25 @@ int main(int argc,char **argv)
     {0., a*b/E, 0.},
     {0., 0., a/E}
   };
+  double cH0W[FLAVS][FLAVS],cH0H0W[FLAVS][FLAVS],cWH0W[FLAVS][FLAVS];
+  
+  //вычисление коммутатора H0 с W
+  for(int j1=0;j1<FLAVS;j1++)
+    for(int j2=0;j2<FLAVS;j2++)
+  for(int j3=0;j3<FLAVS;j3++)
+    cH0W[j1][j2]=H0[j1][j3]*W[j3][j2]-W[j1][j3]*H0[j3][j2];
+      
+  //вычисление коммутатора [H0,[H0,W]]
+  for(int j1=0;j1<FLAVS;j1++)
+    for(int j2=0;j2<FLAVS;j2++)
+  for(int j3=0;j3<FLAVS;j3++)
+    cH0H0W[j1][j2]=H0[j1][j3]*cH0W[j3][j2]-cH0W[j1][j3]*H0[j3][j2];
+      
+  //вычисление коммутатора [W,[H0,W]]
+  for(int j1=0;j1<FLAVS;j1++)
+    for(int j2=0;j2<FLAVS;j2++)
+  for(int j3=0;j3<FLAVS;j3++)
+    cWH0W[j1][j2]=W[j1][j3]*cH0W[j3][j2]-cH0W[j1][j3]*W[j3][j2];
   
   wf_ctx ctx;
   ctx.N=N;
@@ -204,6 +236,9 @@ int main(int argc,char **argv)
   ctx.dens=ex;
   ctx.H0=H0;
   ctx.W=W;
+  ctx.cH0W=cH0W;
+  ctx.cH0H0W=cH0H0W;
+  ctx.cWH0W=cWH0W;
   
   aWF_calc(&ctx,Psi);
   
