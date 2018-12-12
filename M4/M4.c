@@ -59,10 +59,10 @@ void aWF_calc(wf_ctx *ctx, double complex *Psi, double complex *APsi)
     {
       for(int j2=0;j2<FLAVS;j2++)
       {
-     A[j1][j2]=-ctx->H0[j1][j2]-(f_p+f_m)*ctx->W[j1][j2]/2.-
-     I*sqrt(3.)*(f_p-f_m)*commut[j1][j2]*h/12.;
+        A[j1][j2]=-ctx->H0[j1][j2]-(f_p+f_m)*ctx->W[j1][j2]/2.-
+        I*sqrt(3.)*(f_p-f_m)*commut[j1][j2]*h/12.;
       }
-     z+=A[j1][j1]/3.;
+      z+=A[j1][j1]/3.;
     }
     
     //обесшпуривание
@@ -90,12 +90,12 @@ void aWF_calc(wf_ctx *ctx, double complex *Psi, double complex *APsi)
 
     for(int j1=0;j1<FLAVS;j1++)
       for(int j2=0;j2<FLAVS;j2++)
-    {
-      Eom4[j1][j2]=cexp(I*h*z)*cexp(I*L[0]*h)*
-      ((1.-L[0]*(r0-L[1]*r1))*One[j1][j2]+
-      (r0+L[2]*r1)*A[j1][j2]+
-      r1*(A[j1][0]*A[0][j2]+A[j1][1]*A[1][j2]+A[j1][2]*A[2][j2]));
-    }
+      {
+        Eom4[j1][j2]=cexp(I*h*z)*cexp(I*L[0]*h)*
+        ((1.-L[0]*(r0-L[1]*r1))*One[j1][j2]+
+        (r0+L[2]*r1)*A[j1][j2]+
+        r1*(A[j1][0]*A[0][j2]+A[j1][1]*A[1][j2]+A[j1][2]*A[2][j2]));
+      }
     
     for(int j1=0;j1<FLAVS;j1++)
     {
@@ -107,14 +107,6 @@ void aWF_calc(wf_ctx *ctx, double complex *Psi, double complex *APsi)
     for(int j1=0;j1<FLAVS;j1++)
       Psi[j1]=psi_0[j1];  
   }
-  //возвращаю шпур назад
-  A[0][0]=A[0][0]+z;
-  A[1][1]=A[1][1]+z;
-  A[2][2]=A[2][2]+z;
-  //-IH=IA
-  for(int j1=0;j1<FLAVS;j1++)
-    for(int j2=0;j2<FLAVS;j2++)
-      APsi[j1]=I*A[j1][j2]*Psi[j2];
 }
 
 double ex(double t)
@@ -215,43 +207,18 @@ int main(int argc,char **argv)
   ctx.H0=H0;
   ctx.W=W;
   
-  double complex APsi[FLAVS],APsi_0[FLAVS]; //APsi_0 нужна просто чтобы ошибку не выдавало
-  
-  aWF_calc(&ctx,Psi,APsi);
-  
-  double delta=0.00003; //h=0.00002 при N=50000, d1=0.2
-  double complex psi_0[FLAVS],Psi_p[FLAVS];
-  
-  for(int j1=0;j1<FLAVS;j1++)
-    psi_0[j1]=Psi[j1];
-    
-  Psi[0]=c12*c13; Psi[1]=s12*c13; Psi[2]=s13;
-
-  ctx.d1=d1+delta;
-  aWF_calc(&ctx,Psi,APsi_0);
-  
-  for(int j1=0;j1<FLAVS;j1++)
-    Psi_p[j1]=(Psi[j1]-psi_0[j1])/delta;
-    
-  //левая часть равенства -- компоненты производной
-  fprintf(stderr,"%lf+I%lf; ",creal(Psi_p[0]),cimag(Psi_p[0]));
-  fprintf(stderr,"%lf+I%lf; ",creal(Psi_p[1]),cimag(Psi_p[1]));
-  fprintf(stderr,"%lf+I%lf; \n",creal(Psi_p[2]),cimag(Psi_p[2]));
-  //правая часть равенства -- компоненты -IHPsi(0.2)
-  fprintf(stderr,"%lf+I%lf; ",creal(APsi[0]),cimag(APsi[0]));
-  fprintf(stderr,"%lf+I%lf; ",creal(APsi[1]),cimag(APsi[1]));
-  fprintf(stderr,"%lf+I%lf; \n",creal(APsi[2]),cimag(APsi[2]));
+  aWF_calc(&ctx,Psi);
   
   Pee=c12*c12*c13*c13*Psi[0]*conj(Psi[0]);
   Pee+=s12*s12*c13*c13*Psi[1]*conj(Psi[1]);
   Pee+=s13*s13*Psi[2]*conj(Psi[2]);  
   
   printf("%lf\t%lf\t%ld\n",d1,Pee,N);
+  
   /*
   fprintf(stderr,"%lf+I%lf; ",creal(Psi[0]),cimag(Psi[0]));
   fprintf(stderr,"%lf+I%lf; ",creal(Psi[1]),cimag(Psi[1]));
   fprintf(stderr,"%lf+I%lf; ",creal(Psi[2]),cimag(Psi[2]));
-  
   
   double complex z;
   z=Psi[0]*conj(Psi[0])+Psi[1]*conj(Psi[1])+Psi[2]*conj(Psi[2]);
