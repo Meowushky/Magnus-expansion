@@ -224,6 +224,8 @@ int main(int argc,char **argv)
   
   for(int j1=0;j1<FLAVS;j1++)
     psi_0[j1]=Psi[j1];
+    
+  Psi[0]=c12*c13; Psi[1]=s12*c13; Psi[2]=s13;
 
   ctx.d1=d1+delta;
   aWF_calc(&ctx,Psi,APsi_0);
