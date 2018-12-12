@@ -19,16 +19,16 @@ typedef struct
 
 double ex(double);
 void EigenV(double*, double, double);
-void aWF_calc(wf_ctx*, double complex*, double complex*);
+void aWF_calc(wf_ctx*, double complex*);
 
-void aWF_calc(wf_ctx *ctx, double complex *Psi, double complex *APsi)
+void aWF_calc(wf_ctx *ctx, double complex *Psi)
 {
   uint64_t i;
   double h,x;
   x=ctx->d0;
   h=(ctx->d1-ctx->d0)/(ctx->N-1);
   double xi_m,xi_p,f_m,f_p;
-  double z,p,q;
+  double z,p,q,F;
   double commut[FLAVS][FLAVS],L[2*FLAVS-1];
   double complex A[FLAVS][FLAVS],Eom4[FLAVS][FLAVS],psi_0[FLAVS];
   double complex r0,r1;
@@ -84,17 +84,19 @@ void aWF_calc(wf_ctx *ctx, double complex *Psi, double complex *APsi)
       p+=(A[j1][0]*A[0][j1]+A[j1][1]*A[1][j1]+A[j1][2]*A[2][j1])/2.;
 
     EigenV(L,p,q);
+    
+    F=2.*sqrt(p/3.);
 
-    r0=-(1.-cexp(I*L[3]*h))/L[3];
-    r1=-(-r0-(1.-cexp(I*L[4]*h))/L[4])/(L[3]-L[4]);
+    r0=-(1.-cexp(I*L[3]*F*h))/L[3]; // r0/F
+    r1=-(-r0-(1.-cexp(I*L[4]*F*h))/L[4])/(L[3]-L[4]);// r1/F^2
 
     for(int j1=0;j1<FLAVS;j1++)
       for(int j2=0;j2<FLAVS;j2++)
       {
-        Eom4[j1][j2]=cexp(I*h*z)*cexp(I*L[0]*h)*
+        Eom4[j1][j2]=cexp(I*h*z)*cexp(I*L[0]*F*h)*
         ((1.-L[0]*(r0-L[1]*r1))*One[j1][j2]+
-        (r0+L[2]*r1)*A[j1][j2]+
-        r1*(A[j1][0]*A[0][j2]+A[j1][1]*A[1][j2]+A[j1][2]*A[2][j2]));
+        (r0+L[2]*r1)*A[j1][j2]/F+
+        r1*(A[j1][0]*A[0][j2]+A[j1][1]*A[1][j2]+A[j1][2]*A[2][j2])/(F*F));
       }
     
     for(int j1=0;j1<FLAVS;j1++)
@@ -151,10 +153,6 @@ void EigenV(double *L,double p, double q)
       }
   L[3]=L[1]-L[0]; //a
   L[4]=L[2]-L[0]; //b
-  u=2.*sqrt(p/3.);
-
-  for(int i=0;i<2*FLAVS-1;i++)
-    L[i]=u*L[i];
 }
 
 int main(int argc,char **argv)
