@@ -11,22 +11,27 @@ enum
 
 typedef struct
 {
-  uint64_t N;
-  double d0,d1;
+  double d0,d1,tol;
   double (*dens)(double);
   double (*H0)[FLAVS],(*W)[FLAVS],(*cH0W)[FLAVS],(*cH0H0W)[FLAVS],(*cWH0W)[FLAVS];  
 } wf_ctx;
 
+typedef struct
+{
+  double complex Psi[FLAVS];
+  uint64_t calls;
+  uint64_t step; //double(?) число изменений шагов
+} rwf_ctx;
+
 double ex(double);
 void EigenV(double*, double, double);
-void aWF_calc(wf_ctx*, double complex*);
+void aWF_calc(wf_ctx*, rwf_ctx*);
 
-void aWF_calc(wf_ctx *ctx, double complex *Psi)
+void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
 {
-  double h,x,tol,Er,S1[FLAVS][FLAVS];
+  double h,x,Er,S1[FLAVS][FLAVS];
   x=ctx->d0;
-  tol=0.0001;
-  h=tol/2.;
+  h=ctx->tol/2.;
   double xi_m,xi_p,f_m,f_p;
   double z,p,q,F;
   double L[2*FLAVS-1];
@@ -43,7 +48,9 @@ void aWF_calc(wf_ctx *ctx, double complex *Psi)
   {
     if(x+h>ctx->d1) 
       h=ctx->d1-x;
-      
+    
+    res->calls+=1;
+    
     xi_m=x+(1.-1./sqrt(3.))*h/2.;
     xi_p=x+(1.+1./sqrt(3.))*h/2.;
     f_m=ctx->dens(xi_m);
@@ -104,23 +111,26 @@ void aWF_calc(wf_ctx *ctx, double complex *Psi)
     
     for(int j1=0;j1<FLAVS;j1++)
     {
-      psi_0[j1]=Eom4[j1][0]*Psi[0];
-      psi_0[j1]+=Eom4[j1][1]*Psi[1];
-      psi_0[j1]+=Eom4[j1][2]*Psi[2];
+      psi_0[j1]=Eom4[j1][0]*res->Psi[0];
+      psi_0[j1]+=Eom4[j1][1]*res->Psi[1];
+      psi_0[j1]+=Eom4[j1][2]*res->Psi[2];
     }
 
     for(int j1=0;j1<FLAVS;j1++)
-      Psi[j1]=psi_0[j1];
+      res->Psi[j1]=psi_0[j1];
 
     for(int j1=0;j1<FLAVS;j1++)
       for(int j2=0;j2<FLAVS;j2++)
         for(int j3=0;j3<FLAVS;j3++)
-          psi_0[j1]=(S1[j1][j2]+h*S2[j1][j2]+h*h*S1[j1][j3]*S1[j3][j2])*Psi[j2];
+          psi_0[j1]=(S1[j1][j2]+h*S2[j1][j2]+h*h*S1[j1][j3]*S1[j3][j2])*res->Psi[j2];
       
     Er=h*h*sqrt(psi_0[0]*psi_0[0]+psi_0[1]*psi_0[1]+psi_0[2]*psi_0[2]);
     
-    if(Er>tol)
-      h=h*0.8*pow(tol/Er,1./3.);
+    if(Er>ctx->tol)
+    {
+      h=h*0.8*pow(ctx->tol/Er,1./3.);
+      res->step+=1;
+    }
   }
 }
 
@@ -170,7 +180,7 @@ void EigenV(double *L,double p, double q)
 
 int main(int argc,char **argv)
 {  
-  double a=4351960.,b=0.030554,E=1.0;
+  double a=4351960.,b=0.030554,E=1.0,tol=0.001;
   double s12=sqrt(0.308),
     s13=sqrt(0.0234),
     c12=sqrt(1.-s12*s12),
@@ -181,20 +191,13 @@ int main(int argc,char **argv)
     {c12*s12*c13*c13, s12*s12*c13*c13, s12*c13*s13},
     {c12*s13*c13, s12*c13*s13, s13*s13}
   };
-  double complex Psi[FLAVS]=
-  {
-    c12*c13,
-    s12*c13,
-    s13
-  };
   double d0=0.1,d1=1.;
   double Pee;
-  uint64_t N=10;
   
   if(argc==4)
   {
     d1=atof(argv[1]);
-    N=(uint64_t)atoi(argv[2]);
+    tol=atof(argv[2]);
     E=atof(argv[3]);  
   }
   if((d1<d0)||(E<0))
@@ -230,7 +233,6 @@ int main(int argc,char **argv)
     cWH0W[j1][j2]=W[j1][j3]*cH0W[j3][j2]-cH0W[j1][j3]*W[j3][j2];
   
   wf_ctx ctx;
-  ctx.N=N;
   ctx.d0=d0;
   ctx.d1=d1;
   ctx.dens=ex;
@@ -239,14 +241,22 @@ int main(int argc,char **argv)
   ctx.cH0W=cH0W;
   ctx.cH0H0W=cH0H0W;
   ctx.cWH0W=cWH0W;
+  ctx.tol=tol;
   
-  aWF_calc(&ctx,Psi);
+  rwf_ctx res;
+  res.Psi[0]=c12*c13;
+  res.Psi[1]=s12*c13;
+  res.Psi[2]=s13;
+  res.calls=0;
+  res.step=0;
   
-  Pee=c12*c12*c13*c13*Psi[0]*conj(Psi[0]);
-  Pee+=s12*s12*c13*c13*Psi[1]*conj(Psi[1]);
-  Pee+=s13*s13*Psi[2]*conj(Psi[2]);  
+  aWF_calc(&ctx,&res);
   
-  printf("%lf\t%lf\t%ld\n",d1,Pee,N);
+  Pee=c12*c12*c13*c13*res.Psi[0]*conj(res.Psi[0]);
+  Pee+=s12*s12*c13*c13*res.Psi[1]*conj(res.Psi[1]);
+  Pee+=s13*s13*res.Psi[2]*conj(res.Psi[2]);  
+  
+  printf("%lf\t%lf\t%ld\t%ld\n",d1,Pee,res.calls,res.step);
   
   /*
   fprintf(stderr,"%lf+I%lf; ",creal(Psi[0]),cimag(Psi[0]));
