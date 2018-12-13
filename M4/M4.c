@@ -35,8 +35,8 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
   double xi_m,xi_p,f_m,f_p;
   double z,p,q,F;
   double L[2*FLAVS-1];
-  double complex A[FLAVS][FLAVS],Eom4[FLAVS][FLAVS],psi_0[FLAVS],S2[FLAVS][FLAVS];
-  double complex r0,r1;
+  double complex A[FLAVS][FLAVS],Eom4[FLAVS][FLAVS],S2[FLAVS][FLAVS];
+  double complex r0,r1,psi_0[FLAVS],psi_1[FLAVS];
   double One[FLAVS][FLAVS]=
   {
     {1., 0., 0.},
@@ -46,7 +46,7 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
   
   while(x<ctx->d1) 
   {
-    if(x+h>ctx->d1) 
+    if((x+h>ctx->d1)) 
       h=ctx->d1-x;
     
     res->calls+=1;
@@ -109,6 +109,10 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
         r1*(A[j1][0]*A[0][j2]+A[j1][1]*A[1][j2]+A[j1][2]*A[2][j2])/(F*F));
       }
     
+    psi_1[0]=res->Psi[0]; 
+    psi_1[1]=res->Psi[1]; 
+    psi_1[2]=res->Psi[2]; //сохранение предыдущих значений
+    
     for(int j1=0;j1<FLAVS;j1++)
     {
       psi_0[j1]=Eom4[j1][0]*res->Psi[0];
@@ -127,9 +131,13 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
     Er=h*h*sqrt(psi_0[0]*psi_0[0]+psi_0[1]*psi_0[1]+psi_0[2]*psi_0[2]);
     
     if(Er>ctx->tol)
-    {
+    { 
+      x=x-h;
       h=h*0.8*pow(ctx->tol/Er,1./3.);
       res->step+=1;
+      res->Psi[0]=psi_1[0]; 
+      res->Psi[1]=psi_1[1]; 
+      res->Psi[2]=psi_1[2]; 
     }
   }
 }
@@ -257,16 +265,6 @@ int main(int argc,char **argv)
   Pee+=s13*s13*res.Psi[2]*conj(res.Psi[2]);  
   
   printf("%lf\t%lf\t%ld\t%ld\n",d1,Pee,res.calls,res.step);
-  
-  /*
-  fprintf(stderr,"%lf+I%lf; ",creal(Psi[0]),cimag(Psi[0]));
-  fprintf(stderr,"%lf+I%lf; ",creal(Psi[1]),cimag(Psi[1]));
-  fprintf(stderr,"%lf+I%lf; ",creal(Psi[2]),cimag(Psi[2]));
-  
-  double complex z;
-  z=Psi[0]*conj(Psi[0])+Psi[1]*conj(Psi[1])+Psi[2]*conj(Psi[2]);
-  fprintf(stderr,"%e+I%e\n",creal(z)-1.0,cimag(z));
-  */
   
 return 0;
 }
