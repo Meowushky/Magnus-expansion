@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <complex.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 enum
 {
@@ -29,6 +30,7 @@ void aWF_calc(wf_ctx*, rwf_ctx*);
 
 void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
 {
+  _Bool flag=0;
   double h,x,Er,S1[FLAVS][FLAVS];
   x=ctx->d0;
   h=ctx->tol/2.;
@@ -46,8 +48,12 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
   
   while(x<ctx->d1) 
   {
-    if((x+h>ctx->d1)) 
-      h=ctx->d1-x;
+    if((x+h<ctx->d1)&&(x+2.*h>ctx->d1)) 
+      {
+          h=(ctx->d1-x)/2.;
+          res->step+=1;
+          flag=1;
+      }
     
     res->calls+=1;
     
@@ -130,7 +136,7 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
       
     Er=h*h*sqrt(psi_0[0]*psi_0[0]+psi_0[1]*psi_0[1]+psi_0[2]*psi_0[2]);
     
-    if(Er>ctx->tol)
+    if((Er>ctx->tol)&&(flag==0))
     { 
       x=x-h;
       h=h*0.8*pow(ctx->tol/Er,1./3.);
