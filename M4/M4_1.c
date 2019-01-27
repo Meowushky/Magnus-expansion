@@ -49,10 +49,10 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res, double complex *APsi)
   while(x<ctx->d1) 
   {
     if((x+h<ctx->d1)&&(x+2.*h>ctx->d1)) 
-      {
-          h=(ctx->d1-x)/2.;
-          flag=1;
-      }
+    {
+      h=(ctx->d1-x)/2.;
+      flag=1;
+    }
     
     res->calls+=1;
     
