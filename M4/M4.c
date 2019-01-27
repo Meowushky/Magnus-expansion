@@ -4,11 +4,30 @@
 #include <complex.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 
 enum
 {
-  FLAVS=3
+  FLAVS=3,
+  MAX_LEN=256,
+  MAX_PAR_LIST=5
 };
+
+enum
+{
+ SUN=0,
+ SN
+};
+
+static double model_par[2][MAX_PAR_LIST]=
+{{65956.,10.54,0,0,0},{52.934,0,0,0,0}};
+
+typedef struct
+{
+  double a,b;
+  char name[MAX_LEN];
+  double par[MAX_PAR_LIST];
+} model_info;
 
 typedef struct
 {
@@ -21,12 +40,14 @@ typedef struct
 {
   double complex Psi[FLAVS];
   uint64_t calls;
-  uint64_t step; //double(?) число изменений шагов
+  uint64_t step;
 } rwf_ctx;
 
-double ex(double);
 void EigenV(double*, double, double);
 void aWF_calc(wf_ctx*, rwf_ctx*);
+void init_model_data(model_info*);
+double sun_model(double);
+double sn_model(double);
 
 void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
 {
@@ -48,7 +69,7 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
   
   while(x<ctx->d1) 
   {
-    if((x+h<ctx->d1)&&(x+2.*h>ctx->d1)) 
+    if((x+h<ctx->d1)&&(x+2.*h>ctx->d1)&&(flag==0)) 
       {
           h=(ctx->d1-x)/2.;
           res->step+=1;
@@ -65,7 +86,7 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
   
     z=0.;
     
-    for(int j1=0;j1<FLAVS;j1++)
+    for(int j1=0;j1<FLAVS;j1++) 
       for(int j2=0;j2<FLAVS;j2++)
       {
         S1[j1][j2]=-sqrt(3.)*(f_p-f_m)*ctx->cH0W[j1][j2]/12.;
@@ -148,10 +169,28 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
   }
 }
 
-double ex(double t)
+void init_model_data(model_info *model)
 {
-  double g=659560, n=10.54;
-  return g*exp(-n*t);
+  strncpy(model[SUN].name,"sun",MAX_LEN);
+  model[SUN].a=0.1;
+  model[SUN].b=1.;
+  model[SUN].par[0]=model_par[SUN][0];
+  model[SUN].par[1]=model_par[SUN][1];
+
+  strncpy(model[SN].name,"sn",MAX_LEN);
+  model[SN].a=0.02;
+  model[SN].b=20.;
+  model[SN].par[0]=model_par[SN][0];
+}
+
+double sun_model(double t)
+{
+  return model_par[SUN][0]*exp(-model_par[SUN][1]*t);
+}
+
+double sn_model(double t)
+{
+  return model_par[SN][0]/(t*t*t);
 }
 
 void EigenV(double *L,double p, double q)
@@ -193,8 +232,13 @@ void EigenV(double *L,double p, double q)
 }
 
 int main(int argc,char **argv)
-{  
-  double a=4351960.,b=0.030554,E=1.0,tol=0.001;
+{ 
+  model_info model[2];
+  init_model_data(model);
+  
+  char model_name[]="sun";
+  
+  double a=4351960.,b=0.030554,E=1.0,tol=0.0001;
   double s12=sqrt(0.308),
     s13=sqrt(0.0234),
     c12=sqrt(1.-s12*s12),
@@ -211,8 +255,8 @@ int main(int argc,char **argv)
   if(argc==4)
   {
     d1=atof(argv[1]);
-    tol=atof(argv[2]);
-    E=atof(argv[3]);  
+    E=atof(argv[2]);
+    tol=atof(argv[3]);
   }
   if((d1<d0)||(E<0))
   {
@@ -231,25 +275,25 @@ int main(int argc,char **argv)
   //вычисление коммутатора H0 с W
   for(int j1=0;j1<FLAVS;j1++)
     for(int j2=0;j2<FLAVS;j2++)
-  for(int j3=0;j3<FLAVS;j3++)
-    cH0W[j1][j2]=H0[j1][j3]*W[j3][j2]-W[j1][j3]*H0[j3][j2];
+      for(int j3=0;j3<FLAVS;j3++)
+        cH0W[j1][j2]=H0[j1][j3]*W[j3][j2]-W[j1][j3]*H0[j3][j2];
       
   //вычисление коммутатора [H0,[H0,W]]
   for(int j1=0;j1<FLAVS;j1++)
     for(int j2=0;j2<FLAVS;j2++)
-  for(int j3=0;j3<FLAVS;j3++)
-    cH0H0W[j1][j2]=H0[j1][j3]*cH0W[j3][j2]-cH0W[j1][j3]*H0[j3][j2];
+      for(int j3=0;j3<FLAVS;j3++)
+        cH0H0W[j1][j2]=H0[j1][j3]*cH0W[j3][j2]-cH0W[j1][j3]*H0[j3][j2];
       
   //вычисление коммутатора [W,[H0,W]]
   for(int j1=0;j1<FLAVS;j1++)
     for(int j2=0;j2<FLAVS;j2++)
-  for(int j3=0;j3<FLAVS;j3++)
-    cWH0W[j1][j2]=W[j1][j3]*cH0W[j3][j2]-cH0W[j1][j3]*W[j3][j2];
+      for(int j3=0;j3<FLAVS;j3++)
+        cWH0W[j1][j2]=W[j1][j3]*cH0W[j3][j2]-cH0W[j1][j3]*W[j3][j2];
   
   wf_ctx ctx;
   ctx.d0=d0;
   ctx.d1=d1;
-  ctx.dens=ex;
+  ctx.dens=sun_model;
   ctx.H0=H0;
   ctx.W=W;
   ctx.cH0W=cH0W;
@@ -264,13 +308,34 @@ int main(int argc,char **argv)
   res.calls=0;
   res.step=0;
   
+  double psi0[3];
+  psi0[0]=res.Psi[0];
+  psi0[1]=res.Psi[1];
+  psi0[2]=res.Psi[2];
+  
   aWF_calc(&ctx,&res);
   
   Pee=c12*c12*c13*c13*res.Psi[0]*conj(res.Psi[0]);
   Pee+=s12*s12*c13*c13*res.Psi[1]*conj(res.Psi[1]);
   Pee+=s13*s13*res.Psi[2]*conj(res.Psi[2]);  
   
-  printf("%lf\t%lf\t%ld\t%ld\n",d1,Pee,res.calls,res.step);
+  fprintf(stdout,"# a=%lf\n",d0);
+  fprintf(stdout,"# b=%lf\n",d1);
+  fprintf(stdout,"# tol=%1.1e\n",tol);
+  fprintf(stdout,"# model=%s\n",model_name);
+  fprintf(stdout,"# s12=sqrt(%lf)\n",s12*s12);
+  fprintf(stdout,"# s13=sqrt(%lf)\n",s13*s13);
+  fprintf(stdout,"# psi0=((%lf,%lf),(%lf,%lf),(%lf,%lf))\n",
+    creal(psi0[0]),cimag(psi0[0]),
+    creal(psi0[1]),cimag(psi0[1]),
+    creal(psi0[2]),cimag(psi0[2]));
+  
+  fprintf(stdout,"## |psi1|^2=%lf\n",creal(res.Psi[0])*creal(res.Psi[0])+cimag(res.Psi[0])*cimag(res.Psi[0]));
+  fprintf(stdout,"## |psi2|^2=%lf\n",creal(res.Psi[1])*creal(res.Psi[1])+cimag(res.Psi[1])*cimag(res.Psi[1]));
+  fprintf(stdout,"## |psi3|^2=%lf\n",creal(res.Psi[2])*creal(res.Psi[2])+cimag(res.Psi[2])*cimag(res.Psi[2]));
+  fprintf(stdout,"## calls=%ld\n",res.calls);
+  
+  fprintf(stdout,"%lf\t%lf\n",E,Pee);
   
 return 0;
 }
