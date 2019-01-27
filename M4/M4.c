@@ -4,11 +4,30 @@
 #include <complex.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 
 enum
 {
-  FLAVS=3
+  FLAVS=3,
+  MAX_LEN=256,
+  MAX_PAR_LIST=5
 };
+
+enum
+{
+ SUN=0,
+ SN
+};
+
+static double model_par[2][MAX_PAR_LIST]=
+{{65956.,10.54,0,0,0},{52.934,0,0,0,0}};
+
+typedef struct
+{
+  double a,b;
+  char name[MAX_LEN];
+  double par[MAX_PAR_LIST];
+} model_info;
 
 typedef struct
 {
@@ -24,10 +43,11 @@ typedef struct
   uint64_t step;
 } rwf_ctx;
 
-double sn_model(double);
-double sun_model(double);
 void EigenV(double*, double, double);
 void aWF_calc(wf_ctx*, rwf_ctx*);
+void init_model_data(model_info*);
+double sun_model(double);
+double sn_model(double);
 
 void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
 {
@@ -149,16 +169,28 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
   }
 }
 
-double sn_model(double t)
+void init_model_data(model_info *model)
 {
-  double g=52.934;
-  return g/(t*t*t);
+  strncpy(model[SUN].name,"sun",MAX_LEN);
+  model[SUN].a=0.1;
+  model[SUN].b=1.;
+  model[SUN].par[0]=model_par[SUN][0];
+  model[SUN].par[1]=model_par[SUN][1];
+
+  strncpy(model[SN].name,"sn",MAX_LEN);
+  model[SN].a=0.02;
+  model[SN].b=20.;
+  model[SN].par[0]=model_par[SN][0];
 }
 
 double sun_model(double t)
 {
-  double g=65956;
-  return g*exp(-10.54*t);
+  return model_par[SUN][0]*exp(-model_par[SUN][1]*t);
+}
+
+double sn_model(double t)
+{
+  return model_par[SN][0]/(t*t*t);
 }
 
 void EigenV(double *L,double p, double q)
@@ -201,7 +233,11 @@ void EigenV(double *L,double p, double q)
 
 int main(int argc,char **argv)
 { 
+  model_info model[2];
+  init_model_data(model);
+  
   char model_name[]="sun";
+  
   double a=4351960.,b=0.030554,E=1.0,tol=0.0001;
   double s12=sqrt(0.308),
     s13=sqrt(0.0234),
@@ -219,8 +255,8 @@ int main(int argc,char **argv)
   if(argc==4)
   {
     d1=atof(argv[1]);
-    tol=atof(argv[2]);
-    E=atof(argv[3]);  
+    E=atof(argv[2]);
+    tol=atof(argv[3]);
   }
   if((d1<d0)||(E<0))
   {
@@ -299,7 +335,7 @@ int main(int argc,char **argv)
   fprintf(stdout,"## |psi3|^2=%lf\n",creal(res.Psi[2])*creal(res.Psi[2])+cimag(res.Psi[2])*cimag(res.Psi[2]));
   fprintf(stdout,"## calls=%ld\n",res.calls);
   
-  printf("%lf\t%lf\n",E,Pee);
+  fprintf(stdout,"%lf\t%lf\n",E,Pee);
   
 return 0;
 }
