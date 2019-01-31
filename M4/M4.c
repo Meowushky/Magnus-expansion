@@ -567,7 +567,7 @@ int main(int argc,char **argv)
     creal(res.Psi[2]),cimag(res.Psi[2]));
   
   fprintf(stream,"# b E Pee\n");  
-  fprintf(stream,"%lf\t%lf\t%lf\n",b,E,Pee);
+  fprintf(stream,"%lf\t%lf\t%lf\n",d1,E,Pee);
   
   if(stream!=stderr)
   {
