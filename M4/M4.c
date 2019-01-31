@@ -445,22 +445,16 @@ int main(int argc,char **argv)
   }
   else
   {
-    /*
-    m_len=snprintf(tmp,MAX_LEN,"%s-%s_E%4.3lf_a%4.3lf_b%4.3lf_t%4.3lf.dat",
+    strncpy(tmp,cfg[P_OUT].par.n,MAX_LEN-1);
+    tmp[MAX_LEN]='\0';
+/*    snprintf(tmp,MAX_LEN,"%s-%s_E%4.3lf_a%4.3lf_b%4.3lf_t%4.3lf.dat",
     argv[0],
     mode[chosen_model].name,
     cfg[P_E].par.v,
     cfg[P_A].par.v,
     cfg[P_B].par.v,
     cfg[P_TOL].par.v);
-    
-    if(m_len>=MAX_LEN)
-    {
-      fprintf(stderr,"Ошибка: слишком длинная строка (%s).\n",tmp);
-      return 2;
-    }
-    * */
-    
+*/
     stream=fopen(tmp,"w");
   }
   

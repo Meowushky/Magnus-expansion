@@ -90,7 +90,7 @@ int main()
       
       Tr+=A[j1][j1]; 
     }
-    z=Tr/3;
+    z=Tr/3.;
     
     //обесшпуривание
 	 A[0][0]=A[0][0]-z;
@@ -172,10 +172,9 @@ int main()
         Eom2[j1][j2]=cexp(I*h*z)*cexp(I*L_r[0]*h)*((1-L_r[0]*(r0-L_r[1]*r1))*One[j1][j2]+(r0+L_r[2]*r1)*A[j1][j2]+r1*A2[j1][j2]);
     }
   
-     
+  P=0.;  
   for(int j1=0;j1<FLAVS;j1++)
   {
-	  P=0.;
       Psi[j1]=Eom2[j1][0]*Psi[0];
       Psi[j1]+=Eom2[j1][1]*Psi[1];
       Psi[j1]+=Eom2[j1][2]*Psi[2];
