@@ -445,6 +445,7 @@ int main(int argc,char **argv)
   }
   else
   {
+    /*
     m_len=snprintf(tmp,MAX_LEN,"%s-%s_E%4.3lf_a%4.3lf_b%4.3lf_t%4.3lf.dat",
     argv[0],
     mode[chosen_model].name,
@@ -458,6 +459,7 @@ int main(int argc,char **argv)
       fprintf(stderr,"Ошибка: слишком длинная строка (%s).\n",tmp);
       return 2;
     }
+    * */
     
     stream=fopen(tmp,"w");
   }
@@ -563,8 +565,8 @@ int main(int argc,char **argv)
   */
   
   fprintf(stream,"# calls=%ld\n",res.calls);
-  fprintf(stream,"# prev. step=%lf\n",res.prev_step);
-  fprintf(stream,"# last step=%lf\n",res.last_step);
+  fprintf(stream,"# prev. step=%4.3e\n",res.prev_step);
+  fprintf(stream,"# last step=%4.3e\n",res.last_step);
   fprintf(stream,"# Psi=%lf\t%lf\t%lf\t%lf\t%lf\t%lf\n",
     creal(res.Psi[0]),cimag(res.Psi[0]),
     creal(res.Psi[1]),cimag(res.Psi[1]),
@@ -630,8 +632,8 @@ void print_conf(FILE *stream, conf_data *cfg)
 {  
   fprintf(stream,"# %s=%lf\n",cfg[P_A].name,cfg[P_A].par.v);
   fprintf(stream,"# %s=%lf\n",cfg[P_B].name,cfg[P_B].par.v);
-  fprintf(stream,"# %s=%lf\n",cfg[P_E].name,cfg[P_E].par.v);
-  fprintf(stream,"# %s=%lf\n",cfg[P_TOL].name,cfg[P_TOL].par.v);
+  fprintf(stream,"# %s=%4.3e\n",cfg[P_E].name,cfg[P_E].par.v);
+  fprintf(stream,"# %s=%4.3e\n",cfg[P_TOL].name,cfg[P_TOL].par.v);
   fprintf(stream,"# %s=%lf\n",cfg[P_S12].name,cfg[P_S12].par.v);
   fprintf(stream,"# %s=%lf\n",cfg[P_S13].name,cfg[P_S13].par.v);
   fprintf(stream,"# %s=%lf\n",cfg[P_S23].name,cfg[P_S23].par.v);
