@@ -462,8 +462,7 @@ int main(int argc,char **argv)
 */
     stream=fopen(tmp,"w");
   }
-  
-//  char model_name[]="sun";
+
   double a=4351960.,b=0.030554,E=cfg[P_E].par.v,tol=cfg[P_TOL].par.v;
   double s12=cfg[P_S12].par.v,
     s13=cfg[P_S13].par.v,
@@ -532,9 +531,9 @@ int main(int argc,char **argv)
   Pee+=s12*s12*c13*c13*res.Psi[1]*conj(res.Psi[1]);
   Pee+=s13*s13*res.Psi[2]*conj(res.Psi[2]);
   
-  fprintf(stream,"## |psi1|=%lf\n",sqrt(creal(res.Psi[0])*creal(res.Psi[0])+cimag(res.Psi[0])*cimag(res.Psi[0])));
-  fprintf(stream,"## |psi2|=%lf\n",sqrt(creal(res.Psi[1])*creal(res.Psi[1])+cimag(res.Psi[1])*cimag(res.Psi[1])));
-  fprintf(stream,"## |psi3|=%lf\n",sqrt(creal(res.Psi[2])*creal(res.Psi[2])+cimag(res.Psi[2])*cimag(res.Psi[2])));
+  fprintf(stream,"## |psi1|=%9.8lf\n",sqrt(creal(res.Psi[0])*creal(res.Psi[0])+cimag(res.Psi[0])*cimag(res.Psi[0])));
+  fprintf(stream,"## |psi2|=%9.8lf\n",sqrt(creal(res.Psi[1])*creal(res.Psi[1])+cimag(res.Psi[1])*cimag(res.Psi[1])));
+  fprintf(stream,"## |psi3|=%9.8lf\n",sqrt(creal(res.Psi[2])*creal(res.Psi[2])+cimag(res.Psi[2])*cimag(res.Psi[2])));
   
   fprintf(stream,"# calls=%ld\n",res.calls);
   fprintf(stream,"# prev. step=%4.3e\n",res.prev_step);
@@ -604,8 +603,8 @@ void print_conf(FILE *stream, conf_data *cfg)
 {  
   fprintf(stream,"# %s=%lf\n",cfg[P_A].name,cfg[P_A].par.v);
   fprintf(stream,"# %s=%lf\n",cfg[P_B].name,cfg[P_B].par.v);
-  fprintf(stream,"# %s=%4.3e\n",cfg[P_E].name,cfg[P_E].par.v);
-  fprintf(stream,"# %s=%4.3e\n",cfg[P_TOL].name,cfg[P_TOL].par.v);
+  fprintf(stream,"# %s=%e\n",cfg[P_E].name,cfg[P_E].par.v);
+  fprintf(stream,"# %s=%e\n",cfg[P_TOL].name,cfg[P_TOL].par.v);
   fprintf(stream,"# %s=%lf\n",cfg[P_S12].name,cfg[P_S12].par.v);
   fprintf(stream,"# %s=%lf\n",cfg[P_S13].name,cfg[P_S13].par.v);
   fprintf(stream,"# %s=%lf\n",cfg[P_S23].name,cfg[P_S23].par.v);
