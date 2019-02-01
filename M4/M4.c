@@ -447,7 +447,7 @@ int main(int argc,char **argv)
   {
     strncpy(tmp,cfg[P_OUT].par.n,MAX_LEN-1);
     tmp[MAX_LEN]='\0';
-/*    snprintf(tmp,MAX_LEN,"%s-%s_E%4.3lf_a%4.3lf_b%4.3lf_t%4.3lf.dat",
+/*  snprintf(tmp,MAX_LEN,"%s-%s_E%4.3lf_a%4.3lf_b%4.3lf_t%4.3lf.dat",
     argv[0],
     mode[chosen_model].name,
     cfg[P_E].par.v,
