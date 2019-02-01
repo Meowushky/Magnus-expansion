@@ -103,7 +103,7 @@ void get_conf(char*,char*, conf_data*);
 
 void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
 {
-  _Bool flag=0;
+  _Bool flag=false;
   double h,x,Er,S1[FLAVS][FLAVS];
   x=ctx->d0;
   h=ctx->tol/2.;
@@ -121,12 +121,17 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
   
   while(x<ctx->d1) 
   {
-    if((x+h<ctx->d1)&&(x+2.*h>ctx->d1)&&(flag==0)) 
+    if(true==flag)
+    {
+      h=ctx->d1-x;
+    }
+    
+    if((x+h<ctx->d1)&&(x+2.*h>ctx->d1)&&(false==flag)) 
       {
         res->prev_step=h;
         h=(ctx->d1-x)/2.;
           
-        flag=1;
+        flag=true;
       }
     
     res->calls+=1;
@@ -210,7 +215,7 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
       
     Er=h*h*sqrt(psi_0[0]*psi_0[0]+psi_0[1]*psi_0[1]+psi_0[2]*psi_0[2]);
     
-    if((Er>ctx->tol)&&(flag==0))
+    if((Er>ctx->tol)&&(false==flag))
     { 
       x=x-h;
       h=h*0.8*pow(ctx->tol/Er,1./3.);
