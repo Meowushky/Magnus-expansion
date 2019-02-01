@@ -474,18 +474,6 @@ int main(int argc,char **argv)
     d1=cfg[P_B].par.v;
   double Pee;
   
-  /*if(argc==4)
-  {
-    d1=atof(argv[1]);
-    E=atof(argv[2]);
-    tol=atof(argv[3]);
-  }
-  if((d1<d0)||(E<0))
-  {
-    printf("Error! E<0 or d1<d0.\n");
-    return 1;
-  }*/
-  
   double H0[FLAVS][FLAVS]=
   {
     {0., 0., 0.},
@@ -537,26 +525,11 @@ int main(int argc,char **argv)
   
   Pee=c12*c12*c13*c13*res.Psi[0]*conj(res.Psi[0]);
   Pee+=s12*s12*c13*c13*res.Psi[1]*conj(res.Psi[1]);
-  Pee+=s13*s13*res.Psi[2]*conj(res.Psi[2]);  
-/*  
-  fprintf(stdout,"# a=%lf\n",d0);
-  fprintf(stdout,"# b=%lf\n",d1);
-  fprintf(stdout,"# tol=%1.1e\n",tol);
-  fprintf(stdout,"# model=%s\n",model_name);
-  fprintf(stdout,"# s12=sqrt(%lf)\n",s12*s12);
-  fprintf(stdout,"# s13=sqrt(%lf)\n",s13*s13);
-  fprintf(stdout,"# psi0=((%lf,%lf),(%lf,%lf),(%lf,%lf))\n",
-    creal(psi0[0]),cimag(psi0[0]),
-    creal(psi0[1]),cimag(psi0[1]),
-    creal(psi0[2]),cimag(psi0[2]));
+  Pee+=s13*s13*res.Psi[2]*conj(res.Psi[2]);
   
-  fprintf(stdout,"## |psi1|^2=%lf\n",creal(res.Psi[0])*creal(res.Psi[0])+cimag(res.Psi[0])*cimag(res.Psi[0]));
-  fprintf(stdout,"## |psi2|^2=%lf\n",creal(res.Psi[1])*creal(res.Psi[1])+cimag(res.Psi[1])*cimag(res.Psi[1]));
-  fprintf(stdout,"## |psi3|^2=%lf\n",creal(res.Psi[2])*creal(res.Psi[2])+cimag(res.Psi[2])*cimag(res.Psi[2]));
-  fprintf(stdout,"## calls=%ld\n",res.calls);
-  
-  fprintf(stdout,"%lf\t%lf\n",E,Pee);
-  */
+  fprintf(stream,"## |psi1|=%lf\n",sqrt(creal(res.Psi[0])*creal(res.Psi[0])+cimag(res.Psi[0])*cimag(res.Psi[0])));
+  fprintf(stream,"## |psi2|=%lf\n",sqrt(creal(res.Psi[1])*creal(res.Psi[1])+cimag(res.Psi[1])*cimag(res.Psi[1])));
+  fprintf(stream,"## |psi3|=%lf\n",sqrt(creal(res.Psi[2])*creal(res.Psi[2])+cimag(res.Psi[2])*cimag(res.Psi[2])));
   
   fprintf(stream,"# calls=%ld\n",res.calls);
   fprintf(stream,"# prev. step=%4.3e\n",res.prev_step);
