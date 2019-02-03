@@ -392,6 +392,9 @@ int main(int argc,char **argv)
     cfg[P_B].name, cfg[P_A].name);
     return 1;
   }
+  
+  cfg[P_A].par.v=mode[chosen_model].a;
+  cfg[P_B].par.v=mode[chosen_model].b;
 
   //E>0
   if(cfg[P_E].par.v<=0)
@@ -474,6 +477,7 @@ int main(int argc,char **argv)
     {c12*s12*c13*c13, s12*s12*c13*c13, s12*c13*s13},
     {c12*s13*c13, s12*c13*s13, s13*s13}
   };
+  //
   double d0=cfg[P_A].par.v,
     d1=cfg[P_B].par.v;
   double Pee;
