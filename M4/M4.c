@@ -26,7 +26,8 @@ enum
 
 enum
 {
-  P_A=0,
+  P_MODEL=0,
+  P_A,
   P_B,
   P_E,
   P_TOL,
@@ -34,7 +35,6 @@ enum
   P_S13,
   P_S23,
   P_OUT,
-  P_MODEL,
   P_PSI0,
   P_EOPL,
   PARAMS=10
@@ -54,6 +54,7 @@ enum
 static const double norm_accuracy=1e-10;
 static double model_par[MODELS][MAX_PAR_LIST]=
 {{65956.,10.54,0,0,0},{52.934,0,0,0,0}};
+int chosen_model=0;
 
 typedef struct
 {
@@ -97,9 +98,9 @@ void aWF_calc(wf_ctx*, rwf_ctx*);
 void init_model_data(model_info*);
 double sun_model(double);
 double sn_model(double);
-void init_conf(conf_data*);
+void init_conf(conf_data*, model_info*);
 void print_conf(FILE*, conf_data*);
-void get_conf(char*,char*, conf_data*);
+void get_conf(char*,char*, conf_data*, model_info*);
 
 void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
 {
@@ -293,7 +294,7 @@ void EigenV(double *L,double p, double q)
 
 int main(int argc,char **argv)
 { 
-  int m_len,chosen_model;
+  int m_len;
   double mod2_psi0;
   char tmp[MAX_READ_LEN];
   
@@ -305,7 +306,7 @@ int main(int argc,char **argv)
   //параметры по умолчанию
   
   conf_data cfg[PARAMS];
-  init_conf(cfg);
+  init_conf(cfg,mode);
   
   //чтение параметров из lua
   
@@ -352,22 +353,12 @@ int main(int argc,char **argv)
        fclose(f);
     }
     
-    get_conf(argv[0],tmp,cfg);
+    get_conf(argv[0],tmp,cfg,mode);
   }
   
   //проверка параметров
   
   //выбор модели
-  chosen_model=0;
-
-  while(chosen_model<MODELS)
-  {
-    if(strcmp(cfg[P_MODEL].par.n, mode[chosen_model].name)==0)
-    {
-      break;
-    }
-    chosen_model++;
-  }
   
   //a0<a
   if(mode[chosen_model].a>cfg[P_A].par.v)
@@ -392,9 +383,6 @@ int main(int argc,char **argv)
     cfg[P_B].name, cfg[P_A].name);
     return 1;
   }
-  
-  cfg[P_A].par.v=mode[chosen_model].a;
-  cfg[P_B].par.v=mode[chosen_model].b;
 
   //E>0
   if(cfg[P_E].par.v<=0)
@@ -547,8 +535,8 @@ int main(int argc,char **argv)
     creal(res.Psi[1]),cimag(res.Psi[1]),
     creal(res.Psi[2]),cimag(res.Psi[2]));
   
-  fprintf(stream,"# b E Pee\n");  
-  fprintf(stream,"%lf\t%lf\t%lf\n",d1,E,Pee);
+  fprintf(stream,"# a b E Pee\n");  
+  fprintf(stream,"%lf\t%lf\t%lf\t%lf\n",d0,d1,E,Pee);
   
   if(stream!=stderr)
   {
@@ -558,13 +546,13 @@ int main(int argc,char **argv)
 return 0;
 }
 
-void init_conf(conf_data *cfg)
+void init_conf(conf_data *cfg, model_info *mode)
 {
-  cfg[P_A].par.v=0.1;
+  cfg[P_A].par.v=mode[chosen_model].a;
   strncpy(cfg[P_A].name,"a",MAX_LEN);
   cfg[P_A].tag=CPD_NUMBER;
   
-  cfg[P_B].par.v=1.0;
+  cfg[P_B].par.v=mode[chosen_model].b;
   strncpy(cfg[P_B].name,"b",MAX_LEN);
   cfg[P_B].tag=CPD_NUMBER;
   
@@ -621,7 +609,7 @@ void print_conf(FILE *stream, conf_data *cfg)
   fprintf(stream,"%lf\t%lf\n",creal(cfg[P_PSI0].par.z[2]),cimag(cfg[P_PSI0].par.z[2]));
 }
 
-void get_conf(char *prog_name, char *cfgfile, conf_data *cfg)
+void get_conf(char *prog_name, char *cfgfile, conf_data *cfg, model_info *mode)
 {
   double Re,Im;
   int stat;
@@ -666,6 +654,19 @@ void get_conf(char *prog_name, char *cfgfile, conf_data *cfg)
       case LUA_TSTRING:
       strncpy(cfg[j1].par.n,lua_tostring(L,-1),MAX_LEN);
       lua_pop(L,1);
+        if(strcmp(cfg[j1].name,"model")==0)
+        {
+            while(chosen_model<MODELS)
+            {
+              if(strcmp(cfg[P_MODEL].par.n, mode[chosen_model].name)==0)
+              {
+                break;
+              }
+              chosen_model++;
+            }
+            cfg[P_A].par.v=mode[chosen_model].a;
+            cfg[P_B].par.v=mode[chosen_model].b;
+        }
       break;
       
       case LUA_TTABLE:
