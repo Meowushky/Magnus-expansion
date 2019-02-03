@@ -477,7 +477,7 @@ int main(int argc,char **argv)
     {c12*s12*c13*c13, s12*s12*c13*c13, s12*c13*s13},
     {c12*s13*c13, s12*c13*s13, s13*s13}
   };
-  //
+
   double d0=cfg[P_A].par.v,
     d1=cfg[P_B].par.v;
   double Pee;
