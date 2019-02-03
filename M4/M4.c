@@ -54,7 +54,7 @@ enum
 static const double norm_accuracy=1e-10;
 static double model_par[MODELS][MAX_PAR_LIST]=
 {{65956.,10.54,0,0,0},{52.934,0,0,0,0}};
-int chosen_model=0;
+uint8_t chosen_model=0;
 
 typedef struct
 {
@@ -294,6 +294,12 @@ void EigenV(double *L,double p, double q)
 
 int main(int argc,char **argv)
 { 
+  if(P_EOPL!=PARAMS)
+  {
+    fprintf(stderr,"Задано неверное количество параметров. Должно быть %d.\n",PARAMS);
+    return 1;
+  }
+  
   int m_len;
   double mod2_psi0;
   char tmp[MAX_READ_LEN];
@@ -329,7 +335,7 @@ int main(int argc,char **argv)
     else
     {
       fclose(f);
-    }
+    } 
   }
 
   if(argc>1)
@@ -647,52 +653,57 @@ void get_conf(char *prog_name, char *cfgfile, conf_data *cfg, model_info *mode)
     switch(stat)
     {
       case LUA_TNUMBER:
-      cfg[j1].par.v=lua_tonumber(L,-1);
-      lua_pop(L,1);
-      break;
+        cfg[j1].par.v=lua_tonumber(L,-1);
+        lua_pop(L,1);
+        break;
       
       case LUA_TSTRING:
-      strncpy(cfg[j1].par.n,lua_tostring(L,-1),MAX_LEN);
-      lua_pop(L,1);
-        if(strcmp(cfg[j1].name,"model")==0)
-        {
-            while(chosen_model<MODELS)
-            {
-              if(strcmp(cfg[P_MODEL].par.n, mode[chosen_model].name)==0)
+        strncpy(cfg[j1].par.n,lua_tostring(L,-1),MAX_LEN);
+        lua_pop(L,1);
+          if(strcmp(cfg[j1].name,"model")==0)
+          {
+              while(chosen_model<MODELS)
               {
-                break;
+                if(strcmp(cfg[P_MODEL].par.n, mode[chosen_model].name)==0)
+                {
+                  break;
+                }
+                chosen_model++;
               }
-              chosen_model++;
-            }
-            cfg[P_A].par.v=mode[chosen_model].a;
-            cfg[P_B].par.v=mode[chosen_model].b;
-        }
-      break;
+              cfg[P_A].par.v=mode[chosen_model].a;
+              cfg[P_B].par.v=mode[chosen_model].b;
+          }
+        break;
       
       case LUA_TTABLE:
-      for(int i=1;i-1<FLAVS;i++)
-      {
-        lua_pushnumber(L,i);
-        stat=lua_gettable(L,-2);
-    
-        if(LUA_TTABLE!=stat)
+        for(int i=1;i-1<FLAVS;i++)
         {
-          fprintf(stderr,"Значение для %s в файле имеет неверный формат.\n",cfg[j1].name);
-          exit(1);
+          lua_pushnumber(L,i);
+          stat=lua_gettable(L,-2);
+
+          if(LUA_TTABLE!=stat)
+          {
+            fprintf(stderr,"Значение для %s в файле имеет неверный формат.\n",cfg[j1].name);
+            exit(1);
+          }
+    
+          lua_pushnumber(L,1);
+          stat=lua_gettable(L,-2);
+          Re=lua_tonumber(L,-1);
+          lua_pop(L,1);
+
+          lua_pushnumber(L,2);
+          stat=lua_gettable(L,-2);
+          Im=lua_tonumber(L,-1);
+          lua_pop(L,2);
+    
+          cfg[j1].par.z[i-1]=Re+I*Im;
         }
-    
-        lua_pushnumber(L,1);
-        stat=lua_gettable(L,-2);
-        Re=lua_tonumber(L,-1);
-        lua_pop(L,1);
-    
-        lua_pushnumber(L,2);
-        stat=lua_gettable(L,-2);
-        Im=lua_tonumber(L,-1);
-        lua_pop(L,2);
-    
-        cfg[j1].par.z[i-1]=Re+I*Im;
-      }
+        break;
+      
+        default:
+          fprintf(stderr,"Неверно задано значение.\n");
+          exit(1);
     }
   }
 
