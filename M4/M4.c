@@ -536,7 +536,7 @@ int main(int argc,char **argv)
   fprintf(stream,"# calls=%ld\n",res.calls);
   fprintf(stream,"# prev. step=%4.3e\n",res.prev_step);
   fprintf(stream,"# last step=%4.3e\n",res.last_step);
-  fprintf(stream,"# Psi=%lf %lf %lf %lf %lf %lf\n",
+  fprintf(stream,"# Psi={{%lf,%lf},{%lf,%lf},{%lf,%lf}}\n",
     creal(res.Psi[0]),cimag(res.Psi[0]),
     creal(res.Psi[1]),cimag(res.Psi[1]),
     creal(res.Psi[2]),cimag(res.Psi[2]));
