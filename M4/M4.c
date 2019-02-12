@@ -437,7 +437,7 @@ int main(int argc,char **argv)
   
   if(fabs(mod2_psi0-1)>norm_accuracy)
   {
-    fprintf(stderr,"Ошибка: |%s|^2 должен быть равен 1.\n",cfg[P_PSI0].name);
+    fprintf(stderr,"Ошибка: |%s|^2 должен быть равен 1. |%s|^2=%lf\n",cfg[P_PSI0].name, mod2_psi0);
     return 1;
   }
   
