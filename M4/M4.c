@@ -102,196 +102,6 @@ void init_conf(conf_data*, model_info*);
 void print_conf(FILE*, conf_data*);
 void get_conf(char*,char*, conf_data*, model_info*);
 
-void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
-{
-  _Bool flag=false;
-  double h,x,Er,S1[FLAVS][FLAVS];
-  x=ctx->d0;
-  h=ctx->tol/2.;
-  double xi_m,xi_p,f_m,f_p;
-  double z,p,q,F;
-  double L[2*FLAVS-1];
-  double complex A[FLAVS][FLAVS],Eom4[FLAVS][FLAVS],S2[FLAVS][FLAVS];
-  double complex r0,r1,psi_0[FLAVS],psi_1[FLAVS];
-  double One[FLAVS][FLAVS]=
-  {
-    {1., 0., 0.},
-    {0., 1., 0.},
-    {0., 0., 1.}
-  };
-  
-  while(x<ctx->d1) 
-  {
-    if(true==flag)
-    {
-      h=ctx->d1-x;
-    }
-    
-    if((x+h<ctx->d1)&&(x+2.*h>ctx->d1)&&(false==flag)) 
-      {
-        res->prev_step=h;
-        h=(ctx->d1-x)/2.;
-          
-        flag=true;
-      }
-    
-    res->calls+=1;
-    
-    xi_m=x+(1.-1./sqrt(3.))*h/2.;
-    xi_p=x+(1.+1./sqrt(3.))*h/2.;
-    f_m=ctx->dens(xi_m);
-    f_p=ctx->dens(xi_p);
-    x+=h;
-  
-    z=0.;
-    
-    for(int j1=0;j1<FLAVS;j1++) 
-      for(int j2=0;j2<FLAVS;j2++)
-      {
-        S1[j1][j2]=-sqrt(3.)*(f_p-f_m)*ctx->cH0W[j1][j2]/12.;
-        S2[j1][j2]=I*sqrt(3.)*(f_p-f_m)*(ctx->cH0H0W[j1][j2]+(f_p+f_m)*ctx->cWH0W[j1][j2]/2.)/24.;
-      }
-    for(int j1=0;j1<FLAVS;j1++)
-    {
-      for(int j2=0;j2<FLAVS;j2++)
-      {
-        A[j1][j2]=-ctx->H0[j1][j2]-(f_p+f_m)*ctx->W[j1][j2]/2.+
-        I*S1[j1][j2]*h;
-      }
-      z+=A[j1][j1]/3.;
-    }
-    
-    //обесшпуривание
-    A[0][0]=A[0][0]-z;
-    A[1][1]=A[1][1]-z;
-    A[2][2]=A[2][2]-z;  
- 
-    //По Крамеру находит переменную q=Det
-    q =A[0][0]*A[1][1]*A[2][2];
-    q+=A[0][1]*A[1][2]*A[2][0];
-    q+=A[0][2]*A[1][0]*A[2][1];
-    q-=A[0][0]*A[1][2]*A[2][1];
-    q-=A[0][1]*A[1][0]*A[2][2];
-    q-=A[0][2]*A[1][1]*A[2][0];
-    
-    p=0.;
-
-    for(int j1=0;j1<FLAVS;j1++)
-      p+=(A[j1][0]*A[0][j1]+A[j1][1]*A[1][j1]+A[j1][2]*A[2][j1])/2.;
-
-    EigenV(L,p,q);
-    
-    F=2.*sqrt(p/3.);
-
-    r0=-(1.-cexp(I*L[3]*F*h))/L[3]; // r0/F
-    r1=-(-r0-(1.-cexp(I*L[4]*F*h))/L[4])/(L[3]-L[4]);// r1/F^2
-
-    for(int j1=0;j1<FLAVS;j1++)
-      for(int j2=0;j2<FLAVS;j2++)
-      {
-        Eom4[j1][j2]=cexp(I*h*z)*cexp(I*L[0]*F*h)*
-        ((1.-L[0]*(r0-L[1]*r1))*One[j1][j2]+
-        (r0+L[2]*r1)*A[j1][j2]/F+
-        r1*(A[j1][0]*A[0][j2]+A[j1][1]*A[1][j2]+A[j1][2]*A[2][j2])/(F*F));
-      }
-    
-    psi_1[0]=res->Psi[0]; 
-    psi_1[1]=res->Psi[1]; 
-    psi_1[2]=res->Psi[2]; //сохранение предыдущих значений
-    
-    for(int j1=0;j1<FLAVS;j1++)
-    {
-      psi_0[j1]=Eom4[j1][0]*res->Psi[0];
-      psi_0[j1]+=Eom4[j1][1]*res->Psi[1];
-      psi_0[j1]+=Eom4[j1][2]*res->Psi[2];
-    }
-
-    for(int j1=0;j1<FLAVS;j1++)
-      res->Psi[j1]=psi_0[j1];
-
-    for(int j1=0;j1<FLAVS;j1++)
-      for(int j2=0;j2<FLAVS;j2++)
-        for(int j3=0;j3<FLAVS;j3++)
-          psi_0[j1]=(S1[j1][j2]+h*S2[j1][j2]+h*h*S1[j1][j3]*S1[j3][j2])*res->Psi[j2];
-      
-    Er=h*h*sqrt(psi_0[0]*psi_0[0]+psi_0[1]*psi_0[1]+psi_0[2]*psi_0[2]);
-    
-    if((Er>ctx->tol)&&(false==flag))
-    { 
-      x=x-h;
-      h=h*0.8*pow(ctx->tol/Er,1./3.);
-      res->Psi[0]=psi_1[0]; 
-      res->Psi[1]=psi_1[1]; 
-      res->Psi[2]=psi_1[2]; 
-    }
-  }
-  res->last_step=h;
-}
-
-void init_model_data(model_info *mode)
-{
-  strncpy(mode[SUN].name,"sun",MAX_LEN);
-  mode[SUN].a=0.1;
-  mode[SUN].b=1.;
-  mode[SUN].par[0]=model_par[SUN][0];
-  mode[SUN].par[1]=model_par[SUN][1];
-  mode[SUN].dens=sun_model;
-  
-  strncpy(mode[SN].name,"sn",MAX_LEN);
-  mode[SN].a=0.02;
-  mode[SN].b=20.;
-  mode[SN].par[0]=model_par[SN][0];
-  mode[SN].dens=sn_model;
-}
-
-double sun_model(double t)
-{
-  return model_par[SUN][0]*exp(-model_par[SUN][1]*t);
-}
-
-double sn_model(double t)
-{
-  return model_par[SN][0]/(t*t*t);
-}
-
-void EigenV(double *L,double p, double q)
-{
-  double arg,u;
-  arg=acos((3.*q*sqrt(3.))/(2.*p*sqrt(p)))/3.;
-
-  L[0]=cos(arg);
-  L[1]=cos(arg-2.*M_PI/3.);
-
-  if(L[1]<L[0])
-  {
-    u=L[0];
-    L[0]=L[1];
-    L[1]=u;
-  }
-  
-  L[2]=cos(arg-4.*M_PI/3.);
-
-  if(L[2]<L[0])
-  {
-    u=L[0];
-    L[0]=L[2];
-    L[2]=u;
-
-    u=L[1];
-    L[1]=L[2];
-    L[2]=u;
-  }
-  else
-    if(L[2]<L[1])
-      {
-        u=L[1];
-        L[1]=L[2];
-        L[2]=u;
-      }
-  L[3]=L[1]-L[0]; //a
-  L[4]=L[2]-L[0]; //b
-}
-
 int main(int argc,char **argv)
 { 
   if(P_EOPL!=PARAMS)
@@ -536,7 +346,7 @@ int main(int argc,char **argv)
   fprintf(stream,"# calls=%ld\n",res.calls);
   fprintf(stream,"# prev. step=%4.3e\n",res.prev_step);
   fprintf(stream,"# last step=%4.3e\n",res.last_step);
-  fprintf(stream,"# Psi={{%lf,%lf},{%lf,%lf},{%lf,%lf}}\n",
+  fprintf(stream,"# psi={{%lf,%lf},{%lf,%lf},{%lf,%lf}}\n",
     creal(res.Psi[0]),cimag(res.Psi[0]),
     creal(res.Psi[1]),cimag(res.Psi[1]),
     creal(res.Psi[2]),cimag(res.Psi[2]));
@@ -550,6 +360,196 @@ int main(int argc,char **argv)
   }
   
 return 0;
+}
+
+void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
+{
+  _Bool flag=false;
+  double h,x,Er,S1[FLAVS][FLAVS];
+  x=ctx->d0;
+  h=ctx->tol/2.;
+  double xi_m,xi_p,f_m,f_p;
+  double z,p,q,F;
+  double L[2*FLAVS-1];
+  double complex A[FLAVS][FLAVS],Eom4[FLAVS][FLAVS],S2[FLAVS][FLAVS];
+  double complex r0,r1,psi_0[FLAVS],psi_1[FLAVS];
+  double One[FLAVS][FLAVS]=
+  {
+    {1., 0., 0.},
+    {0., 1., 0.},
+    {0., 0., 1.}
+  };
+  
+  while(x<ctx->d1) 
+  {
+    if(true==flag)
+    {
+      h=ctx->d1-x;
+    }
+    
+    if((x+h<ctx->d1)&&(x+2.*h>ctx->d1)&&(false==flag)) 
+      {
+        res->prev_step=h;
+        h=(ctx->d1-x)/2.;
+          
+        flag=true;
+      }
+    
+    res->calls+=1;
+    
+    xi_m=x+(1.-1./sqrt(3.))*h/2.;
+    xi_p=x+(1.+1./sqrt(3.))*h/2.;
+    f_m=ctx->dens(xi_m);
+    f_p=ctx->dens(xi_p);
+    x+=h;
+  
+    z=0.;
+    
+    for(int j1=0;j1<FLAVS;j1++) 
+      for(int j2=0;j2<FLAVS;j2++)
+      {
+        S1[j1][j2]=-sqrt(3.)*(f_p-f_m)*ctx->cH0W[j1][j2]/12.;
+        S2[j1][j2]=I*sqrt(3.)*(f_p-f_m)*(ctx->cH0H0W[j1][j2]+(f_p+f_m)*ctx->cWH0W[j1][j2]/2.)/24.;
+      }
+    for(int j1=0;j1<FLAVS;j1++)
+    {
+      for(int j2=0;j2<FLAVS;j2++)
+      {
+        A[j1][j2]=-ctx->H0[j1][j2]-(f_p+f_m)*ctx->W[j1][j2]/2.+
+        I*S1[j1][j2]*h;
+      }
+      z+=A[j1][j1]/3.;
+    }
+    
+    //обесшпуривание
+    A[0][0]=A[0][0]-z;
+    A[1][1]=A[1][1]-z;
+    A[2][2]=A[2][2]-z;  
+ 
+    //По Крамеру находит переменную q=Det
+    q =A[0][0]*A[1][1]*A[2][2];
+    q+=A[0][1]*A[1][2]*A[2][0];
+    q+=A[0][2]*A[1][0]*A[2][1];
+    q-=A[0][0]*A[1][2]*A[2][1];
+    q-=A[0][1]*A[1][0]*A[2][2];
+    q-=A[0][2]*A[1][1]*A[2][0];
+    
+    p=0.;
+
+    for(int j1=0;j1<FLAVS;j1++)
+      p+=(A[j1][0]*A[0][j1]+A[j1][1]*A[1][j1]+A[j1][2]*A[2][j1])/2.;
+
+    EigenV(L,p,q);
+    
+    F=2.*sqrt(p/3.);
+
+    r0=-(1.-cexp(I*L[3]*F*h))/L[3]; // r0/F
+    r1=-(-r0-(1.-cexp(I*L[4]*F*h))/L[4])/(L[3]-L[4]);// r1/F^2
+
+    for(int j1=0;j1<FLAVS;j1++)
+      for(int j2=0;j2<FLAVS;j2++)
+      {
+        Eom4[j1][j2]=cexp(I*h*z)*cexp(I*L[0]*F*h)*
+        ((1.-L[0]*(r0-L[1]*r1))*One[j1][j2]+
+        (r0+L[2]*r1)*A[j1][j2]/F+
+        r1*(A[j1][0]*A[0][j2]+A[j1][1]*A[1][j2]+A[j1][2]*A[2][j2])/(F*F));
+      }
+    
+    psi_1[0]=res->Psi[0]; 
+    psi_1[1]=res->Psi[1]; 
+    psi_1[2]=res->Psi[2]; //сохранение предыдущих значений
+    
+    for(int j1=0;j1<FLAVS;j1++)
+    {
+      psi_0[j1]=Eom4[j1][0]*res->Psi[0];
+      psi_0[j1]+=Eom4[j1][1]*res->Psi[1];
+      psi_0[j1]+=Eom4[j1][2]*res->Psi[2];
+    }
+
+    for(int j1=0;j1<FLAVS;j1++)
+      res->Psi[j1]=psi_0[j1];
+
+    for(int j1=0;j1<FLAVS;j1++)
+      for(int j2=0;j2<FLAVS;j2++)
+        for(int j3=0;j3<FLAVS;j3++)
+          psi_0[j1]=(S1[j1][j2]+h*S2[j1][j2]+h*h*S1[j1][j3]*S1[j3][j2])*res->Psi[j2];
+      
+    Er=h*h*sqrt(psi_0[0]*psi_0[0]+psi_0[1]*psi_0[1]+psi_0[2]*psi_0[2]);
+    
+    if((Er>ctx->tol)&&(false==flag))
+    { 
+      x=x-h;
+      h=h*0.8*pow(ctx->tol/Er,1./3.);
+      res->Psi[0]=psi_1[0]; 
+      res->Psi[1]=psi_1[1]; 
+      res->Psi[2]=psi_1[2]; 
+    }
+  }
+  res->last_step=h;
+}
+
+void init_model_data(model_info *mode)
+{
+  strncpy(mode[SUN].name,"sun",MAX_LEN);
+  mode[SUN].a=0.1;
+  mode[SUN].b=1.;
+  mode[SUN].par[0]=model_par[SUN][0];
+  mode[SUN].par[1]=model_par[SUN][1];
+  mode[SUN].dens=sun_model;
+  
+  strncpy(mode[SN].name,"sn",MAX_LEN);
+  mode[SN].a=0.02;
+  mode[SN].b=20.;
+  mode[SN].par[0]=model_par[SN][0];
+  mode[SN].dens=sn_model;
+}
+
+double sun_model(double t)
+{
+  return model_par[SUN][0]*exp(-model_par[SUN][1]*t);
+}
+
+double sn_model(double t)
+{
+  return model_par[SN][0]/(t*t*t);
+}
+
+void EigenV(double *L,double p, double q)
+{
+  double arg,u;
+  arg=acos((3.*q*sqrt(3.))/(2.*p*sqrt(p)))/3.;
+
+  L[0]=cos(arg);
+  L[1]=cos(arg-2.*M_PI/3.);
+
+  if(L[1]<L[0])
+  {
+    u=L[0];
+    L[0]=L[1];
+    L[1]=u;
+  }
+  
+  L[2]=cos(arg-4.*M_PI/3.);
+
+  if(L[2]<L[0])
+  {
+    u=L[0];
+    L[0]=L[2];
+    L[2]=u;
+
+    u=L[1];
+    L[1]=L[2];
+    L[2]=u;
+  }
+  else
+    if(L[2]<L[1])
+      {
+        u=L[1];
+        L[1]=L[2];
+        L[2]=u;
+      }
+  L[3]=L[1]-L[0]; //a
+  L[4]=L[2]-L[0]; //b
 }
 
 void init_conf(conf_data *cfg, model_info *mode)
@@ -566,7 +566,7 @@ void init_conf(conf_data *cfg, model_info *mode)
   strncpy(cfg[P_E].name,"E",MAX_LEN);
   cfg[P_E].tag=CPD_NUMBER;
   
-  cfg[P_TOL].par.v=1e-4;
+  cfg[P_TOL].par.v=1e-5;
   strncpy(cfg[P_TOL].name,"tol",MAX_LEN);
   cfg[P_TOL].tag=CPD_NUMBER;
   
@@ -606,6 +606,9 @@ void print_conf(FILE *stream, conf_data *cfg)
   fprintf(stream,"# %s=%lf\n",cfg[P_S12].name,cfg[P_S12].par.v);
   fprintf(stream,"# %s=%lf\n",cfg[P_S13].name,cfg[P_S13].par.v);
   fprintf(stream,"# %s=%lf\n",cfg[P_S23].name,cfg[P_S23].par.v);
+  fprintf(stream,"# %s^2=%lf\n",cfg[P_S12].name,cfg[P_S12].par.v*cfg[P_S12].par.v);
+  fprintf(stream,"# %s^2=%lf\n",cfg[P_S13].name,cfg[P_S13].par.v*cfg[P_S12].par.v);
+  fprintf(stream,"# %s^2=%lf\n",cfg[P_S23].name,cfg[P_S23].par.v*cfg[P_S12].par.v);
   fprintf(stream,"# %s=%s\n",cfg[P_OUT].name,cfg[P_OUT].par.n);
   fprintf(stream,"# %s=%s\n",cfg[P_MODEL].name,cfg[P_MODEL].par.n);
   
