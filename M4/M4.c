@@ -247,7 +247,7 @@ int main(int argc,char **argv)
   
   if(fabs(mod2_psi0-1)>norm_accuracy)
   {
-    fprintf(stderr,"Ошибка: |%s|^2-1=%lf слишком большая неточность для унитарности.\n",cfg[P_PSI0].name, mod2_psi0-1);
+    fprintf(stderr,"Ошибка: |%s|^2-1=%10.9lf слишком большая неточность для унитарности.\n",cfg[P_PSI0].name, mod2_psi0-1);
     return 1;
   }
   
