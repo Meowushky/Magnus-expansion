@@ -441,8 +441,8 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
     
     F=2.*sqrt(p/3.);
 
-    r0=-(1.-cexp(I*L[3]*F*h))/L[3]; // r0/F
-    r1=-(-r0-(1.-cexp(I*L[4]*F*h))/L[4])/(L[3]-L[4]);// r1/F^2
+    r0=-(2.*sin(L[3]*F*h/2.)*sin(L[3]*F*h/2.)-I*sin(L[3]*F*h))/L[3]; // r0/F
+    r1=-(-r0-(2.*sin(L[4]*F*h/2.)*sin(L[4]*F*h/2.)-I*sin(L[4]*F*h))/L[4])/(L[3]-L[4]);// r1/F^2
 
     for(int j1=0;j1<FLAVS;j1++)
       for(int j2=0;j2<FLAVS;j2++)
