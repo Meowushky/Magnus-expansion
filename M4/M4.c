@@ -362,7 +362,7 @@ return 0;
 
 void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
 {
-  _Bool flag=false;
+  bool flag=false;
   double h,x,Er,S1[FLAVS][FLAVS];
   x=ctx->d0;
   h=ctx->tol/2.;
