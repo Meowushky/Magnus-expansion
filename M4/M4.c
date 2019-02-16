@@ -79,17 +79,15 @@ typedef struct
   double prev_step;
 } rwf_ctx;
 
-typedef union
-{
-  double v; //value
-  char n[MAX_LEN]; //name
-  double complex z[FLAVS]; //psi0
-} conf_par;
-
 typedef struct
 {
   uint8_t tag;
-  conf_par par;
+  union
+  {
+    double v; //value
+    char n[MAX_LEN]; //name
+    double complex z[FLAVS]; //psi0
+  } par;
   char name[MAX_LEN];
 } conf_data;
 
@@ -607,8 +605,8 @@ void print_conf(FILE *stream, conf_data *cfg)
   fprintf(stream,"# %s=%lf\n",cfg[P_S13].name,cfg[P_S13].par.v);
   fprintf(stream,"# %s=%lf\n",cfg[P_S23].name,cfg[P_S23].par.v);
   fprintf(stream,"# %s^2=%lf\n",cfg[P_S12].name,cfg[P_S12].par.v*cfg[P_S12].par.v);
-  fprintf(stream,"# %s^2=%lf\n",cfg[P_S13].name,cfg[P_S13].par.v*cfg[P_S12].par.v);
-  fprintf(stream,"# %s^2=%lf\n",cfg[P_S23].name,cfg[P_S23].par.v*cfg[P_S12].par.v);
+  fprintf(stream,"# %s^2=%lf\n",cfg[P_S13].name,cfg[P_S13].par.v*cfg[P_S13].par.v);
+  fprintf(stream,"# %s^2=%lf\n",cfg[P_S23].name,cfg[P_S23].par.v*cfg[P_S23].par.v);
   fprintf(stream,"# %s=%s\n",cfg[P_OUT].name,cfg[P_OUT].par.n);
   fprintf(stream,"# %s=%s\n",cfg[P_MODEL].name,cfg[P_MODEL].par.n);
   
