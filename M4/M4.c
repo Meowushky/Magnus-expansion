@@ -416,26 +416,26 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
         A[j1][j2]=-ctx->H0[j1][j2]-(f_p+f_m)*ctx->W[j1][j2]/2.+
         I*S1[j1][j2]*h;
       }
-      z+=A[j1][j1]/3.;
+      z+= (double) A[j1][j1]/3.;
     }
     
     //обесшпуривание
-    A[0][0]=A[0][0]-z;
-    A[1][1]=A[1][1]-z;
-    A[2][2]=A[2][2]-z;  
+    A[0][0]=A[0][0]-(double complex) z;
+    A[1][1]=A[1][1]-(double complex) z;
+    A[2][2]=A[2][2]-(double complex) z;  
  
     //По Крамеру находит переменную q=Det
-    q =A[0][0]*A[1][1]*A[2][2];
-    q+=A[0][1]*A[1][2]*A[2][0];
-    q+=A[0][2]*A[1][0]*A[2][1];
-    q-=A[0][0]*A[1][2]*A[2][1];
-    q-=A[0][1]*A[1][0]*A[2][2];
-    q-=A[0][2]*A[1][1]*A[2][0];
+    q = (double) A[0][0]*A[1][1]*A[2][2];
+    q+= (double) A[0][1]*A[1][2]*A[2][0];
+    q+= (double) A[0][2]*A[1][0]*A[2][1];
+    q-= (double) A[0][0]*A[1][2]*A[2][1];
+    q-= (double) A[0][1]*A[1][0]*A[2][2];
+    q-= (double) A[0][2]*A[1][1]*A[2][0];
     
     p=0.;
 
     for(int j1=0;j1<FLAVS;j1++)
-      p+=(A[j1][0]*A[0][j1]+A[j1][1]*A[1][j1]+A[j1][2]*A[2][j1])/2.;
+      p+= (double) (A[j1][0]*A[0][j1]+A[j1][1]*A[1][j1]+A[j1][2]*A[2][j1])/2.;
 
     EigenV(L,p,q);
     
@@ -472,7 +472,7 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
         for(int j3=0;j3<FLAVS;j3++)
           psi_0[j1]=(S1[j1][j2]+h*S2[j1][j2]+h*h*S1[j1][j3]*S1[j3][j2])*res->Psi[j2];
       
-    Er=h*h*sqrt(psi_0[0]*psi_0[0]+psi_0[1]*psi_0[1]+psi_0[2]*psi_0[2]);
+    Er= (double) h*h*sqrt(psi_0[0]*psi_0[0]+psi_0[1]*psi_0[1]+psi_0[2]*psi_0[2]);
     
     if((Er>ctx->tol)&&(false==flag))
     { 
