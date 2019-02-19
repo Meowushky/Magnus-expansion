@@ -110,7 +110,7 @@ int main(int argc,char **argv)
   }
   
   int m_len;
-  double mod2_psi0;
+  double mod2;
   char tmp[MAX_READ_LEN];
   
   FILE *stream;
@@ -183,7 +183,7 @@ int main(int argc,char **argv)
   if(mode[chosen_model].a>cfg[P_A].par.v)
   {
     fprintf(stderr,"Ошибка! Заданная начальная точка интервала слишком мала %s=%lf: заходит за границы применимости используемой модели с %s=%lf.\n",
-    cfg[P_A].name, cfg[P_A].par.v, cfg[P_A].name, mode[chosen_model].a,);
+    cfg[P_A].name, cfg[P_A].par.v, cfg[P_A].name, mode[chosen_model].a);
     return 1;
   }
   
@@ -244,14 +244,14 @@ int main(int argc,char **argv)
   }
   
   //|PSI0|^2-1>10^{-10}
-  mod2_psi0=cfg[P_PSI0].par.z[0]*conj(cfg[P_PSI0].par.z[0]);
-  mod2_psi0+=cfg[P_PSI0].par.z[1]*conj(cfg[P_PSI0].par.z[1]);
-  mod2_psi0+=cfg[P_PSI0].par.z[2]*conj(cfg[P_PSI0].par.z[2]);
+  mod2=cfg[P_PSI0].par.z[0]*conj(cfg[P_PSI0].par.z[0]);
+  mod2+=cfg[P_PSI0].par.z[1]*conj(cfg[P_PSI0].par.z[1]);
+  mod2+=cfg[P_PSI0].par.z[2]*conj(cfg[P_PSI0].par.z[2]);
   
-  if(fabs(mod2_psi0-1)>norm_accuracy)
+  if(fabs(mod2-1.)>norm_accuracy)
   {
     fprintf(stderr,"Ошибка! Квадрат модуля заданного вектора |%s|^2-1=%10.9lf больше запрограммированного параметра %lf.\n",
-    cfg[P_PSI0].name, mod2_psi0-1, norm_accuracy);
+    cfg[P_PSI0].name, mod2-1., norm_accuracy);
     return 1;
   }
   
@@ -343,6 +343,10 @@ int main(int argc,char **argv)
   Pee+=s12*s12*c13*c13*res.Psi[1]*conj(res.Psi[1]);
   Pee+=s13*s13*res.Psi[2]*conj(res.Psi[2]);
   
+  mod2=res.Psi[0]*conj(res.Psi[0]);
+  mod2+=res.Psi[1]*conj(res.Psi[1]);
+  mod2+=res.Psi[2]*conj(res.Psi[2]);;
+  
   fprintf(stream,"## |psi1|=%9.8lf\n", sqrt(creal(res.Psi[0])*creal(res.Psi[0])+cimag(res.Psi[0])*cimag(res.Psi[0])));
   fprintf(stream,"## |psi2|=%9.8lf\n", sqrt(creal(res.Psi[1])*creal(res.Psi[1])+cimag(res.Psi[1])*cimag(res.Psi[1])));
   fprintf(stream,"## |psi3|=%9.8lf\n", sqrt(creal(res.Psi[2])*creal(res.Psi[2])+cimag(res.Psi[2])*cimag(res.Psi[2])));
@@ -350,10 +354,11 @@ int main(int argc,char **argv)
   fprintf(stream,"# calls=%ld\n", res.calls);
   fprintf(stream,"# prev. step=%4.3e\n", res.prev_step);
   fprintf(stream,"# last step=%4.3e\n", res.last_step);
-  fprintf(stream,"# psi={{%lf,%lf},{%lf,%lf},{%lf,%lf}}\n",
+  fprintf(stream,"# psi={{%10.9lf,%10.9lf},{%10.9lf,%10.9lf},{%10.9lf,%10.9lf}}\n",
     creal(res.Psi[0]),cimag(res.Psi[0]),
     creal(res.Psi[1]),cimag(res.Psi[1]),
     creal(res.Psi[2]),cimag(res.Psi[2]));
+  fprintf(stream,"# |psi|^2-1=%10.9lf\n", mod2-1.);
   
   fprintf(stream,"# a b E Pee\n");  
   fprintf(stream,"%lf\t%lf\t%lf\t%lf\n", d0, d1, E, Pee);
