@@ -478,7 +478,7 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
         for(int j3=0;j3<FLAVS;j3++)
           psi_0[j1]=(S1[j1][j2]+h*S2[j1][j2]+h*h*S1[j1][j3]*S1[j3][j2])*res->Psi[j2];
       
-    Er= (double) h*h*sqrt(psi_0[0]*psi_0[0]+psi_0[1]*psi_0[1]+psi_0[2]*psi_0[2]);
+    Er=h*h*sqrt( (double) psi_0[0]*conj(psi_0[0])+psi_0[1]*conj(psi_0[1])+psi_0[2]*conj(psi_0[2]));
     
     if((Er>ctx->tol)&&(false==flag))
     { 
