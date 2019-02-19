@@ -354,11 +354,11 @@ int main(int argc,char **argv)
   fprintf(stream,"# calls=%ld\n", res.calls);
   fprintf(stream,"# prev. step=%4.3e\n", res.prev_step);
   fprintf(stream,"# last step=%4.3e\n", res.last_step);
-  fprintf(stream,"# psi={{%11.10lf,%11.10lf},{%11.10lf,%11.10lf},{%11.10lf,%11.10lf}}\n",
+  fprintf(stream,"# psi={{%12.11lf,%12.11lf},{%12.11lf,%12.11lf},{%12.11lf,%12.11lf}}\n",
     creal(res.Psi[0]),cimag(res.Psi[0]),
     creal(res.Psi[1]),cimag(res.Psi[1]),
     creal(res.Psi[2]),cimag(res.Psi[2]));
-  fprintf(stream,"# |psi|^2-1=%11.10lf\n", mod2-1.);
+  fprintf(stream,"# |psi|^2-1=%4.3e\n", mod2-1.);
   
   fprintf(stream,"# a b E Pee\n");  
   fprintf(stream,"%lf\t%lf\t%lf\t%lf\n", d0, d1, E, Pee);
