@@ -104,7 +104,8 @@ int main(int argc,char **argv)
 { 
   if(P_EOPL!=PARAMS)
   {
-    fprintf(stderr,"Задано неверное количество параметров. Должно быть %d.\n",PARAMS);
+    fprintf(stderr, "[ERROR] Непредвиденная внутренняя ошибка программы: несогласованное состояние настроечных параметров: ожидаемое число параметров %d, запрограммированное: %d\n",
+    P_EOPL, PARAMS);
     return 1;
   }
   
@@ -130,7 +131,8 @@ int main(int argc,char **argv)
     
     if(m_len>=MAX_LEN)
     {
-      fprintf(stderr,"Ошибка: слишком длинная строка (%s).\n",tmp);
+      fprintf(stderr,"Ошибка! Файл %s имеет слишком длинное имя: количество символов превышает допустимое значение %d.\n",
+      tmp,MAX_LEN);
       return 2;
     }
     
@@ -138,7 +140,8 @@ int main(int argc,char **argv)
     
     if(f==NULL)
     {
-     fprintf(stderr,"Такого файла нет: %s.\n",tmp);
+     fprintf(stderr,"Ошибка! Указанный файл c параметрами %s не найден.\n",
+     tmp);
     }
     else
     {
@@ -152,14 +155,16 @@ int main(int argc,char **argv)
     
     if(m_len>=MAX_LEN)
     {
-      fprintf(stderr,"Ошибка: слишком длинная строка (%s).\n",tmp);
+      fprintf(stderr,"Ошибка! Файл %s имеет слишком длинное имя: количество символов превышает допустимое значение %d.\n",
+      tmp,MAX_LEN);
       return 2;
     }
     FILE *f=fopen(tmp,"r");
     
     if(f==NULL)
     {
-     fprintf(stderr,"Такого файла нет: %s.\n",tmp);
+     fprintf(stderr,"Ошибка! Указанный файл с параметрами %s не найден.\n",
+     tmp);
      return 1;
     }
     else
@@ -177,64 +182,64 @@ int main(int argc,char **argv)
   //a0<a
   if(mode[chosen_model].a>cfg[P_A].par.v)
   {
-    fprintf(stderr,"Ошибка: %s=%lf должно быть больше или равно %lf.\n",
-    cfg[P_A].name, cfg[P_A].par.v, mode[chosen_model].a);
+    fprintf(stderr,"Ошибка! Заданная начальная точка интервала слишком мала %s=%lf: заходит за границы применимости используемой модели с %s=%lf.\n",
+    cfg[P_A].name, cfg[P_A].par.v, cfg[P_A].name, mode[chosen_model].a,);
     return 1;
   }
   
   //b<=b0
   if(mode[chosen_model].b<cfg[P_B].par.v)
   {
-    fprintf(stderr,"Ошибка: %s=%lf должно быть меньше или равно %lf.\n",
-    cfg[P_B].name, cfg[P_B].par.v, mode[chosen_model].b);
+    fprintf(stderr,"Ошибка! Заданная конечная точка интервала слишком большая %s=%lf: заходит за границы применимости используемой модели с %s=%lf.\n",
+    cfg[P_B].name, cfg[P_B].par.v, cfg[P_B].name, mode[chosen_model].b);
     return 1;
   }
   
   //a<b
   if(cfg[P_A].par.v>cfg[P_B].par.v)
   {
-    fprintf(stderr,"Ошибка: %s должно быть больше %s.\n",
-    cfg[P_B].name, cfg[P_A].name);
+    fprintf(stderr,"Ошибка! Неверно заданы параметры: конечная точка интервала %s=%lf не может быть меньше начальной %s=%lf.\n",
+    cfg[P_B].name, cfg[P_B].par.v, cfg[P_A].name, cfg[P_A].par.v);
     return 1;
   }
 
   //E>0
   if(cfg[P_E].par.v<=0)
   {
-    fprintf(stderr,"Ошибка: %s должно быть положительным.\n",
-    cfg[P_E].name);
+    fprintf(stderr,"Ошибка! Задана отрицательная или нулевая энергия %s=%lf.\n",
+    cfg[P_E].name, cfg[P_E].par.v);
     return 1;
   }
   
   //TOL>0
   if(cfg[P_TOL].par.v<=0)
   {
-    fprintf(stderr,"Ошибка: %s должен быть положительным.\n",
-    cfg[P_TOL].name);
+    fprintf(stderr,"Ошибка! Задан отрицательный параметр чувствительности %s=%lf.\n",
+    cfg[P_TOL].name, cfg[P_TOL].par.v);
     return 1;
   }
   
   //|S12|<=1
   if(fabs(cfg[P_S12].par.v)>1)
   {
-    fprintf(stderr,"Ошибка: |%s| должен быть меньше 1.\n",
-    cfg[P_S12].name);
+    fprintf(stderr,"Ошибка! Неправильно задан угол: абсолютное значение синуса_12 |%s|=%lf не может принимать значения, больше 1.\n",
+    cfg[P_S12].name, cfg[P_S12].par.v);
     return 1;
   }
   
   //|S13|<=1
   if(fabs(cfg[P_S13].par.v)>1)
   {
-    fprintf(stderr,"Ошибка: |%s| должен быть меньше 1.\n",
-    cfg[P_S13].name);
+    fprintf(stderr,"Ошибка! Неправильно задан угол: абсолютное значение синуса_13 |%s|=%lf не может принимать значения, больше 1.\n",
+    cfg[P_S13].name, cfg[P_S13].par.v);
     return 1;
   }
   
   //|S23|<=1
   if(fabs(cfg[P_S23].par.v)>1)
   {
-    fprintf(stderr,"Ошибка: |%s| должен быть меньше 1.\n",
-    cfg[P_S23].name);
+    fprintf(stderr,"Ошибка! Неправильно задан угол: абсолютное значение синуса_23 |%s|=%lf не может принимать значения, больше 1.\n",
+    cfg[P_S23].name, cfg[P_S23].par.v);
     return 1;
   }
   
@@ -245,7 +250,8 @@ int main(int argc,char **argv)
   
   if(fabs(mod2_psi0-1)>norm_accuracy)
   {
-    fprintf(stderr,"Ошибка: |%s|^2-1=%10.9lf слишком большая неточность для унитарности.\n",cfg[P_PSI0].name, mod2_psi0-1);
+    fprintf(stderr,"Ошибка! Квадрат модуля заданного вектора |%s|^2-1=%10.9lf больше запрограммированного параметра %lf.\n",
+    cfg[P_PSI0].name, mod2_psi0-1, norm_accuracy);
     return 1;
   }
   
@@ -337,20 +343,20 @@ int main(int argc,char **argv)
   Pee+=s12*s12*c13*c13*res.Psi[1]*conj(res.Psi[1]);
   Pee+=s13*s13*res.Psi[2]*conj(res.Psi[2]);
   
-  fprintf(stream,"## |psi1|=%9.8lf\n",sqrt(creal(res.Psi[0])*creal(res.Psi[0])+cimag(res.Psi[0])*cimag(res.Psi[0])));
-  fprintf(stream,"## |psi2|=%9.8lf\n",sqrt(creal(res.Psi[1])*creal(res.Psi[1])+cimag(res.Psi[1])*cimag(res.Psi[1])));
-  fprintf(stream,"## |psi3|=%9.8lf\n",sqrt(creal(res.Psi[2])*creal(res.Psi[2])+cimag(res.Psi[2])*cimag(res.Psi[2])));
+  fprintf(stream,"## |psi1|=%9.8lf\n", sqrt(creal(res.Psi[0])*creal(res.Psi[0])+cimag(res.Psi[0])*cimag(res.Psi[0])));
+  fprintf(stream,"## |psi2|=%9.8lf\n", sqrt(creal(res.Psi[1])*creal(res.Psi[1])+cimag(res.Psi[1])*cimag(res.Psi[1])));
+  fprintf(stream,"## |psi3|=%9.8lf\n", sqrt(creal(res.Psi[2])*creal(res.Psi[2])+cimag(res.Psi[2])*cimag(res.Psi[2])));
   
-  fprintf(stream,"# calls=%ld\n",res.calls);
-  fprintf(stream,"# prev. step=%4.3e\n",res.prev_step);
-  fprintf(stream,"# last step=%4.3e\n",res.last_step);
+  fprintf(stream,"# calls=%ld\n", res.calls);
+  fprintf(stream,"# prev. step=%4.3e\n", res.prev_step);
+  fprintf(stream,"# last step=%4.3e\n", res.last_step);
   fprintf(stream,"# psi={{%lf,%lf},{%lf,%lf},{%lf,%lf}}\n",
     creal(res.Psi[0]),cimag(res.Psi[0]),
     creal(res.Psi[1]),cimag(res.Psi[1]),
     creal(res.Psi[2]),cimag(res.Psi[2]));
   
   fprintf(stream,"# a b E Pee\n");  
-  fprintf(stream,"%lf\t%lf\t%lf\t%lf\n",d0,d1,E,Pee);
+  fprintf(stream,"%lf\t%lf\t%lf\t%lf\n", d0, d1, E, Pee);
   
   if(stream!=stderr)
   {
@@ -597,23 +603,23 @@ void init_conf(conf_data *cfg, model_info *mode)
 
 void print_conf(FILE *stream, conf_data *cfg)
 {  
-  fprintf(stream,"# %s=%lf\n",cfg[P_A].name,cfg[P_A].par.v);
-  fprintf(stream,"# %s=%lf\n",cfg[P_B].name,cfg[P_B].par.v);
-  fprintf(stream,"# %s=%e\n",cfg[P_E].name,cfg[P_E].par.v);
-  fprintf(stream,"# %s=%e\n",cfg[P_TOL].name,cfg[P_TOL].par.v);
-  fprintf(stream,"# %s=%lf\n",cfg[P_S12].name,cfg[P_S12].par.v);
-  fprintf(stream,"# %s=%lf\n",cfg[P_S13].name,cfg[P_S13].par.v);
-  fprintf(stream,"# %s=%lf\n",cfg[P_S23].name,cfg[P_S23].par.v);
-  fprintf(stream,"# %s^2=%lf\n",cfg[P_S12].name,cfg[P_S12].par.v*cfg[P_S12].par.v);
-  fprintf(stream,"# %s^2=%lf\n",cfg[P_S13].name,cfg[P_S13].par.v*cfg[P_S13].par.v);
-  fprintf(stream,"# %s^2=%lf\n",cfg[P_S23].name,cfg[P_S23].par.v*cfg[P_S23].par.v);
-  fprintf(stream,"# %s=%s\n",cfg[P_OUT].name,cfg[P_OUT].par.n);
-  fprintf(stream,"# %s=%s\n",cfg[P_MODEL].name,cfg[P_MODEL].par.n);
+  fprintf(stream,"# %s=%lf\n", cfg[P_A].name, cfg[P_A].par.v);
+  fprintf(stream,"# %s=%lf\n", cfg[P_B].name, cfg[P_B].par.v);
+  fprintf(stream,"# %s=%e\n", cfg[P_E].name, cfg[P_E].par.v);
+  fprintf(stream,"# %s=%e\n", cfg[P_TOL].name, cfg[P_TOL].par.v);
+  fprintf(stream,"# %s=%lf\n", cfg[P_S12].name, cfg[P_S12].par.v);
+  fprintf(stream,"# %s=%lf\n", cfg[P_S13].name, cfg[P_S13].par.v);
+  fprintf(stream,"# %s=%lf\n", cfg[P_S23].name, cfg[P_S23].par.v);
+  fprintf(stream,"# %s^2=%lf\n", cfg[P_S12].name, cfg[P_S12].par.v*cfg[P_S12].par.v);
+  fprintf(stream,"# %s^2=%lf\n", cfg[P_S13].name, cfg[P_S13].par.v*cfg[P_S13].par.v);
+  fprintf(stream,"# %s^2=%lf\n", cfg[P_S23].name, cfg[P_S23].par.v*cfg[P_S23].par.v);
+  fprintf(stream,"# %s=%s\n", cfg[P_OUT].name, cfg[P_OUT].par.n);
+  fprintf(stream,"# %s=%s\n", cfg[P_MODEL].name, cfg[P_MODEL].par.n);
   
-  fprintf(stream,"# %s=",cfg[P_PSI0].name);
-  fprintf(stream,"%lf\t%lf\t",creal(cfg[P_PSI0].par.z[0]),cimag(cfg[P_PSI0].par.z[0]));
-  fprintf(stream,"%lf\t%lf\t",creal(cfg[P_PSI0].par.z[1]),cimag(cfg[P_PSI0].par.z[1]));
-  fprintf(stream,"%lf\t%lf\n",creal(cfg[P_PSI0].par.z[2]),cimag(cfg[P_PSI0].par.z[2]));
+  fprintf(stream,"# %s=", cfg[P_PSI0].name);
+  fprintf(stream,"%lf\t%lf\t", creal(cfg[P_PSI0].par.z[0]), cimag(cfg[P_PSI0].par.z[0]));
+  fprintf(stream,"%lf\t%lf\t", creal(cfg[P_PSI0].par.z[1]), cimag(cfg[P_PSI0].par.z[1]));
+  fprintf(stream,"%lf\t%lf\n", creal(cfg[P_PSI0].par.z[2]), cimag(cfg[P_PSI0].par.z[2]));
 }
 
 void get_conf(char *prog_name, char *cfgfile, conf_data *cfg, model_info *mode)
@@ -648,7 +654,8 @@ void get_conf(char *prog_name, char *cfgfile, conf_data *cfg, model_info *mode)
     stat=lua_getglobal(L,cfg[j1].name);
     if(stat==LUA_TNONE||stat==LUA_TNIL)
     {
-      fprintf(stderr,"Такого параметра нет в файле: (%s).\n",cfg[j1].name);
+      fprintf(stderr,"Такого параметра нет в файле: (%s).\n",
+      cfg[j1].name);
       continue;
     }
     switch(stat)
@@ -684,7 +691,8 @@ void get_conf(char *prog_name, char *cfgfile, conf_data *cfg, model_info *mode)
 
           if(LUA_TTABLE!=stat)
           {
-            fprintf(stderr,"Значение для %s в файле имеет неверный формат.\n",cfg[j1].name);
+            fprintf(stderr,"Значение для %s в файле имеет неверный формат.\n",
+            cfg[j1].name);
             exit(1);
           }
     
