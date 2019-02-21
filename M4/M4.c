@@ -110,7 +110,7 @@ int main(int argc,char **argv)
   }
   
   int m_len;
-  double mod2;
+  double complex mod2;
   char tmp[MAX_READ_LEN];
   
   FILE *stream;
@@ -244,14 +244,14 @@ int main(int argc,char **argv)
   }
   
   //|PSI0|^2-1>10^{-10}
-  mod2= (double) cfg[P_PSI0].par.z[0]*conj(cfg[P_PSI0].par.z[0]);
-  mod2+= (double) cfg[P_PSI0].par.z[1]*conj(cfg[P_PSI0].par.z[1]);
-  mod2+= (double) cfg[P_PSI0].par.z[2]*conj(cfg[P_PSI0].par.z[2]);
+  mod2=cfg[P_PSI0].par.z[0]*conj(cfg[P_PSI0].par.z[0]);
+  mod2+=cfg[P_PSI0].par.z[1]*conj(cfg[P_PSI0].par.z[1]);
+  mod2+=cfg[P_PSI0].par.z[2]*conj(cfg[P_PSI0].par.z[2]);
   
-  if(fabs(mod2-1.)>norm_accuracy)
+  if(fabs(creal(mod2)-1.)>norm_accuracy)
   {
     fprintf(stderr,"Ошибка! Квадрат модуля заданного вектора слишком большой: |%s|^2-1=%4.3e больше запрограммированного параметра %4.3e.\n",
-    cfg[P_PSI0].name, fabs(mod2-1.), norm_accuracy);
+    cfg[P_PSI0].name, fabs(creal(mod2)-1.), norm_accuracy);
     return 1;
   }
   
@@ -343,9 +343,9 @@ int main(int argc,char **argv)
   Pee+=s12*s12*c13*c13*res.Psi[1]*conj(res.Psi[1]);
   Pee+=s13*s13*res.Psi[2]*conj(res.Psi[2]);
   
-  mod2= (double) res.Psi[0]*conj(res.Psi[0]);
-  mod2+= (double) res.Psi[1]*conj(res.Psi[1]);
-  mod2+= (double) res.Psi[2]*conj(res.Psi[2]);
+  mod2=res.Psi[0]*conj(res.Psi[0]);
+  mod2+=res.Psi[1]*conj(res.Psi[1]);
+  mod2+=res.Psi[2]*conj(res.Psi[2]);
   
   fprintf(stream,"## |psi1|=%9.8lf\n", sqrt(creal(res.Psi[0])*creal(res.Psi[0])+cimag(res.Psi[0])*cimag(res.Psi[0])));
   fprintf(stream,"## |psi2|=%9.8lf\n", sqrt(creal(res.Psi[1])*creal(res.Psi[1])+cimag(res.Psi[1])*cimag(res.Psi[1])));
@@ -358,7 +358,7 @@ int main(int argc,char **argv)
     creal(res.Psi[0]),cimag(res.Psi[0]),
     creal(res.Psi[1]),cimag(res.Psi[1]),
     creal(res.Psi[2]),cimag(res.Psi[2]));
-  fprintf(stream,"# |psi|^2-1=%4.3e\n", mod2-1.);
+  fprintf(stream,"# |psi|^2-1=%4.3e\n", creal(mod2)-1.);
   
   fprintf(stream,"# a b E Pee\n");  
   fprintf(stream,"%lf\t%lf\t%lf\t%12.11lf\n", d0, d1, E, Pee);
