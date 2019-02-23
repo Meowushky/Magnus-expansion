@@ -77,6 +77,7 @@ typedef struct
   uint64_t calls;
   double last_step;
   double prev_step;
+  double Er;
 } rwf_ctx;
 
 typedef struct
@@ -301,21 +302,28 @@ int main(int argc,char **argv)
   //вычисление коммутатора H0 с W
   for(int j1=0;j1<FLAVS;j1++)
     for(int j2=0;j2<FLAVS;j2++)
+    {
+      cH0W[j1][j2]=0.;
       for(int j3=0;j3<FLAVS;j3++)
-        cH0W[j1][j2]=H0[j1][j3]*W[j3][j2]-W[j1][j3]*H0[j3][j2];
-      
+        cH0W[j1][j2]+=H0[j1][j3]*W[j3][j2]-W[j1][j3]*H0[j3][j2];
+    }
   //вычисление коммутатора [H0,[H0,W]]
   for(int j1=0;j1<FLAVS;j1++)
     for(int j2=0;j2<FLAVS;j2++)
+    {
+      cH0H0W[j1][j2]=0.;
       for(int j3=0;j3<FLAVS;j3++)
-        cH0H0W[j1][j2]=H0[j1][j3]*cH0W[j3][j2]-cH0W[j1][j3]*H0[j3][j2];
-      
+        cH0H0W[j1][j2]+=H0[j1][j3]*cH0W[j3][j2]-cH0W[j1][j3]*H0[j3][j2];
+    }
   //вычисление коммутатора [W,[H0,W]]
   for(int j1=0;j1<FLAVS;j1++)
     for(int j2=0;j2<FLAVS;j2++)
+    {
+      cWH0W[j1][j2]=0.;
       for(int j3=0;j3<FLAVS;j3++)
-        cWH0W[j1][j2]=W[j1][j3]*cH0W[j3][j2]-cH0W[j1][j3]*W[j3][j2];
-  
+        cWH0W[j1][j2]+=W[j1][j3]*cH0W[j3][j2]-cH0W[j1][j3]*W[j3][j2];
+    }
+    
   wf_ctx ctx;
   ctx.d0=d0;
   ctx.d1=d1;
@@ -354,6 +362,7 @@ int main(int argc,char **argv)
   fprintf(stream,"# calls=%ld\n", res.calls);
   fprintf(stream,"# prev. step=%4.3e\n", res.prev_step);
   fprintf(stream,"# last step=%4.3e\n", res.last_step);
+  fprintf(stream,"# Er=%4.3e\n",res.Er);
   fprintf(stream,"# psi={{%12.11lf,%12.11lf},{%12.11lf,%12.11lf},{%12.11lf,%12.11lf}}\n",
     creal(res.Psi[0]),cimag(res.Psi[0]),
     creal(res.Psi[1]),cimag(res.Psi[1]),
@@ -374,9 +383,9 @@ return 0;
 void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
 {
   bool flag=false;
-  double h,x,Er,S1[FLAVS][FLAVS];
+  double h,x,Er,S1[FLAVS][FLAVS],S1_2[FLAVS][FLAVS];
   x=ctx->d0;
-  h=ctx->tol/2.;
+  h=0.8*sqrt(ctx->tol);
   double xi_m,xi_p,f_m,f_p;
   double z,p,q,F;
   double L[2*FLAVS-1];
@@ -419,6 +428,11 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
       {
         S1[j1][j2]=-sqrt(3.)*(f_p-f_m)*ctx->cH0W[j1][j2]/12.;
         S2[j1][j2]=I*sqrt(3.)*(f_p-f_m)*(ctx->cH0H0W[j1][j2]+(f_p+f_m)*ctx->cWH0W[j1][j2]/2.)/24.;
+        S1_2[j1][j2]=0.;
+        for(int j3=0;j3<FLAVS;j3++)
+        {
+          S1_2[j1][j2]+=S1[j1][j3]*S1[j3][j2];
+        }
       }
     for(int j1=0;j1<FLAVS;j1++)
     {
@@ -436,12 +450,13 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
     A[2][2]=A[2][2]-(double complex) z;  
  
     //По Крамеру находит переменную q=Det
-    q = (double) A[0][0]*A[1][1]*A[2][2];
-    q+= (double) A[0][1]*A[1][2]*A[2][0];
-    q+= (double) A[0][2]*A[1][0]*A[2][1];
-    q-= (double) A[0][0]*A[1][2]*A[2][1];
-    q-= (double) A[0][1]*A[1][0]*A[2][2];
-    q-= (double) A[0][2]*A[1][1]*A[2][0];
+    q = creal(
+        A[0][0]*A[1][1]*A[2][2]
+      + A[0][1]*A[1][2]*A[2][0]
+      + A[0][2]*A[1][0]*A[2][1]
+      - A[0][0]*A[1][2]*A[2][1]
+      - A[0][1]*A[1][0]*A[2][2]
+      - A[0][2]*A[1][1]*A[2][0]);
     
     p=0.;
 
@@ -479,11 +494,13 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
       res->Psi[j1]=psi_0[j1];
 
     for(int j1=0;j1<FLAVS;j1++)
+    {
+      psi_0[j1]=0.+I*0.;
       for(int j2=0;j2<FLAVS;j2++)
-        for(int j3=0;j3<FLAVS;j3++)
-          psi_0[j1]=(S1[j1][j2]+h*S2[j1][j2]+h*h*S1[j1][j3]*S1[j3][j2])*res->Psi[j2];
-      
-    Er=h*h*sqrt( (double) psi_0[0]*conj(psi_0[0])+psi_0[1]*conj(psi_0[1])+psi_0[2]*conj(psi_0[2]));
+          psi_0[j1]+=(S1[j1][j2]+h*S2[j1][j2]+h*h*S1_2[j1][j2])*res->Psi[j2];
+    }
+     
+    Er=h*h*sqrt( (double) (psi_0[0]*conj(psi_0[0])+psi_0[1]*conj(psi_0[1])+psi_0[2]*conj(psi_0[2])));
     
     if((Er>ctx->tol)&&(false==flag))
     { 
@@ -494,6 +511,8 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
       res->Psi[2]=psi_1[2]; 
     }
   }
+  fprintf(stderr,"# Последнее значение x=%12.11lf\n",x);
+  res->Er=Er;
   res->last_step=h;
 }
 

@@ -1,6 +1,6 @@
 CC=gcc
-#CFLAGS=-Wall -Wextra -pedantic -ggdb
-CFLAGS=-Wall -Wextra -pedantic
+#CFLAGS=-Wall -Wextra -pedantic -O0 -ggdb
+CFLAGS=-Wall -Wextra -pedantic -O0 -ggdb
 LDFLAGS=-lm
 
 all: M4
@@ -14,3 +14,6 @@ M4_1: M4_1.c
 
 lua: lua.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -llua -o $@ $<
+
+clean:
+	rm -rf M4
