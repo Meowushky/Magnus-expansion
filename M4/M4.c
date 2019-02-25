@@ -511,7 +511,8 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
       res->Psi[2]=psi_1[2]; 
     }
   }
-  fprintf(stderr,"# Последнее значение x=%12.11lf\n",x);
+  fprintf(stderr,"# Последнее значение x=%12.11lf и разность b-x=%g\n",
+  x,ctx->d1-x);
   res->Er=Er;
   res->last_step=h;
 }
