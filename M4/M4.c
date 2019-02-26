@@ -429,17 +429,17 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
         S1[j1][j2]=-sqrt(3.)*(f_p-f_m)*ctx->cH0W[j1][j2]/12.;
         S2[j1][j2]=I*sqrt(3.)*(f_p-f_m)*(ctx->cH0H0W[j1][j2]+(f_p+f_m)*ctx->cWH0W[j1][j2]/2.)/24.;
         S1_2[j1][j2]=0.;
-        for(int j3=0;j3<FLAVS;j3++)
-        {
-          S1_2[j1][j2]+=S1[j1][j3]*S1[j3][j2];
-        }
       }
+    
     for(int j1=0;j1<FLAVS;j1++)
     {
       for(int j2=0;j2<FLAVS;j2++)
       {
         A[j1][j2]=-ctx->H0[j1][j2]-(f_p+f_m)*ctx->W[j1][j2]/2.+
         I*S1[j1][j2]*h;
+        
+        for(int j3=0;j3<FLAVS;j3++)
+          S1_2[j1][j2]+=S1[j1][j3]*S1[j3][j2];
       }
       z+= (double) A[j1][j1]/3.;
     }
