@@ -36,8 +36,9 @@ enum
   P_S23,
   P_OUT,
   P_PSI0,
+  P_PSI0_NORM_ACC,
   P_EOPL,
-  PARAMS=10
+  PARAMS=11
 };
 
 enum
@@ -51,7 +52,6 @@ enum
   CPD_CX_MATRIX
 };
 
-static const double norm_accuracy=1e-10;
 static double model_par[MODELS][MAX_PAR_LIST]=
 {{65956.,10.54,0,0,0},{52.934,0,0,0,0}};
 uint8_t chosen_model=0;
@@ -139,15 +139,11 @@ int main(int argc,char **argv)
     
     FILE *f=fopen(tmp,"r");
     
-    if(f==NULL)
+    if(f!=NULL)
     {
-     fprintf(stderr,"Ошибка! Указанный файл c параметрами %s не найден.\n",
-     tmp);
+     fclose(f);
+     get_conf(argv[0],tmp,cfg,mode);
     }
-    else
-    {
-      fclose(f);
-    } 
   }
 
   if(argc>1)
@@ -170,7 +166,7 @@ int main(int argc,char **argv)
     }
     else
     {
-       fclose(f);
+      fclose(f);
     }
     
     get_conf(argv[0],tmp,cfg,mode);
@@ -249,10 +245,10 @@ int main(int argc,char **argv)
   mod2+=cfg[P_PSI0].par.z[1]*conj(cfg[P_PSI0].par.z[1]);
   mod2+=cfg[P_PSI0].par.z[2]*conj(cfg[P_PSI0].par.z[2]);
   
-  if(fabs(creal(mod2)-1.)>norm_accuracy)
+  if(fabs(creal(mod2)-1.)>cfg[P_PSI0_NORM_ACC].par.v)
   {
     fprintf(stderr,"Ошибка! Квадрат модуля заданного вектора слишком большой: |%s|^2-1=%4.3e больше запрограммированного параметра %4.3e.\n",
-    cfg[P_PSI0].name, fabs(creal(mod2)-1.), norm_accuracy);
+    cfg[P_PSI0].name, fabs(creal(mod2)-1.), cfg[P_PSI0_NORM_ACC].par.v);
     return 1;
   }
   
@@ -385,7 +381,7 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
   bool flag=false;
   double h,x,Er,S1[FLAVS][FLAVS],S1_2[FLAVS][FLAVS];
   x=ctx->d0;
-  h=0.8*sqrt(ctx->tol);
+  h=ctx->tol/2.;
   double xi_m,xi_p,f_m,f_p;
   double z,p,q,F;
   double L[2*FLAVS-1];
@@ -441,8 +437,9 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
         for(int j3=0;j3<FLAVS;j3++)
           S1_2[j1][j2]+=S1[j1][j3]*S1[j3][j2];
       }
-      z+= (double) A[j1][j1]/3.;
+      z+= (double) A[j1][j1];
     }
+    z=z/3.;
     
     //обесшпуривание
     A[0][0]=A[0][0]-(double complex) z;
@@ -511,8 +508,7 @@ void aWF_calc(wf_ctx *ctx, rwf_ctx *res)
       res->Psi[2]=psi_1[2]; 
     }
   }
-  fprintf(stderr,"# Последнее значение x=%12.11lf и разность b-x=%g\n",
-  x,ctx->d1-x);
+
   res->Er=Er;
   res->last_step=h;
 }
@@ -611,6 +607,10 @@ void init_conf(conf_data *cfg, model_info *mode)
   strncpy(cfg[P_S23].name,"s23",MAX_LEN);
   cfg[P_S23].tag=CPD_NUMBER;
   
+  cfg[P_PSI0_NORM_ACC].par.v=1e-9;
+  strncpy(cfg[P_PSI0_NORM_ACC].name,"psi0_norm_accuracy",MAX_LEN);
+  cfg[P_PSI0_NORM_ACC].tag=CPD_NUMBER;
+  
   strncpy(cfg[P_OUT].par.n,"SCREEN",MAX_LEN);
   strncpy(cfg[P_OUT].name,"out",MAX_LEN);
   cfg[P_OUT].tag=CPD_STRING;
@@ -638,6 +638,7 @@ void print_conf(FILE *stream, conf_data *cfg)
   fprintf(stream,"# %s^2=%lf\n", cfg[P_S12].name, cfg[P_S12].par.v*cfg[P_S12].par.v);
   fprintf(stream,"# %s^2=%lf\n", cfg[P_S13].name, cfg[P_S13].par.v*cfg[P_S13].par.v);
   fprintf(stream,"# %s^2=%lf\n", cfg[P_S23].name, cfg[P_S23].par.v*cfg[P_S23].par.v);
+  fprintf(stream,"# %s=%4.3e\n", cfg[P_PSI0_NORM_ACC].name, cfg[P_PSI0_NORM_ACC].par.v);
   fprintf(stream,"# %s=%s\n", cfg[P_OUT].name, cfg[P_OUT].par.n);
   fprintf(stream,"# %s=%s\n", cfg[P_MODEL].name, cfg[P_MODEL].par.n);
   
