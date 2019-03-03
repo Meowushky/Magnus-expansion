@@ -245,6 +245,8 @@ int main(int argc,char **argv)
   mod2+=cfg[P_PSI0].par.z[1]*conj(cfg[P_PSI0].par.z[1]);
   mod2+=cfg[P_PSI0].par.z[2]*conj(cfg[P_PSI0].par.z[2]);
   
+  cfg[P_PSI0_NORM_ACC].par.v=1.2*cfg[P_PSI0_NORM_ACC].par.v; 
+  
   if(fabs(creal(mod2)-1.)>fabs(cfg[P_PSI0_NORM_ACC].par.v))
   {
     fprintf(stderr,"Ошибка! Квадрат модуля заданного вектора слишком большой: |%s|^2-1=%4.5e больше запрограммированного параметра %4.5e.\n",
